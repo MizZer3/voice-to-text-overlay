@@ -1,0 +1,24 @@
+{
+  "name": "voice-to-text-overlay",
+  "version": "1.0.0",
+  "description": "A fast, lightweight floating desktop overlay for real-time speech-to-text dictation, smart polish transcription, and live translation powered by Google Gemini Live API",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js test/electron-smoke.js",
+    "generate-icons": "node scripts/generate-icons.js",
+    "dist": "node scripts/build-exe.js",
+    "build:exe": "node scripts/build-exe.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^44.2.0",
+    "electron-packager": "^17.1.2"
+  },
+  "dependencies": {
+    "ws": "^8.21.3"
+  }
+}

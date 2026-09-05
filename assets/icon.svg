@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B00"/>
+      <stop offset="100%" stop-color="#9333EA"/>
+    </linearGradient>
+    <linearGradient id="micGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#CBD5E1"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded squircle -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#0F172A" stroke="url(#grad)" stroke-width="3"/>
+  
+  <!-- Outer audio wave rings -->
+  <circle cx="32" cy="30" r="23" fill="none" stroke="#FF6B00" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.4"/>
+
+  <!-- Mic Body -->
+  <rect x="26" y="16" width="12" height="20" rx="6" fill="url(#micGrad)"/>
+  
+  <!-- Mic Arc Support -->
+  <path d="M20 28 C20 37, 44 37, 44 28" fill="none" stroke="#F8FAFC" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Mic Stand -->
+  <line x1="32" y1="37" x2="32" y2="45" stroke="#F8FAFC" stroke-width="3" stroke-linecap="round"/>
+  <line x1="24" y1="45" x2="40" y2="45" stroke="#F8FAFC" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Live glowing dot -->
+  <circle cx="48" cy="14" r="4" fill="#10B981"/>
+</svg>

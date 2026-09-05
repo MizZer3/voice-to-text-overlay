@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Production builds and executables
+dist/
+Gemini Live.exe
+*.exe
+*.lnk
+*.zip
+*.tar.gz
+
+# Logs and environment
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+
+# OS & Editor generated files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.gemini/

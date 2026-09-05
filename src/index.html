@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Live Overlay</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container" id="appContainer">
+    
+    <!-- Window Header (Frameless Drag Handle) -->
+    <header class="window-header">
+      <div class="header-left">
+        <div class="app-brand">
+          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+          <span class="brand-name">Gemini Live</span>
+        </div>
+
+        <div class="status-badge idle" id="statusBadge">
+          <span class="status-dot"></span>
+          <span id="statusText">Очікування</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-icon active" id="btnPin" title="Завжди зверху (Always on Top)" aria-label="Always on top">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="17" x2="12" y2="22"/>
+            <path d="M5 17h14l-2-6V5h1V2H6v3h1v6l-2 6z"/>
+          </svg>
+        </button>
+        <button class="btn-icon" id="btnOpenSettings" title="Налаштування" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+        <button class="btn-icon" id="btnMinimize" title="Згорнути" aria-label="Minimize">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <button class="btn-icon btn-close" id="btnClose" title="Сховати у трей" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="6" y1="18" x2="18" y2="6"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sleek Segmented Control for Modes -->
+    <nav class="mode-bar" id="modeBar">
+      <button class="mode-pill active" data-mode="smart_polish" title="Очищення від слів-паразитів, пунктуація">
+        <svg class="mode-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+        </svg>
+        <span>Чистовик</span>
+      </button>
+      <button class="mode-pill" data-mode="verbatim" title="Дослівна точна стенограма слово в слово">
+        <svg class="mode-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <span>Стенограма</span>
+      </button>
+      <button class="mode-pill" data-mode="live_translate" title="Переклад наживо на обрану мову">
+        <svg class="mode-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <span>Переклад</span>
+        <span class="mode-lang-badge" id="modeLangBadge">EN</span>
+      </button>
+    </nav>
+
+    <!-- Quick Target Language Bar for Live Translate -->
+    <div class="translate-bar" id="translateBar" style="display: none;">
+      <div class="translate-bar-inner">
+        <span class="translate-bar-label">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+          Мова перекладу:
+        </span>
+        <select class="translate-lang-select" id="quickSelectTargetLang" title="Оберіть цільову мову перекладу">
+          <option value="English">English (EN)</option>
+          <option value="Ukrainian">Українська (UK)</option>
+          <option value="Polish">Polski (PL)</option>
+          <option value="German">Deutsch (DE)</option>
+          <option value="Spanish">Español (ES)</option>
+          <option value="French">Français (FR)</option>
+          <option value="Italian">Italiano (IT)</option>
+          <option value="Portuguese">Português (PT)</option>
+          <option value="Japanese">日本語 (JA)</option>
+          <option value="Chinese">中文 (ZH)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Dynamic Audio Waveform Visualizer -->
+    <div class="waveform-container" id="waveformContainer">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+
+    <!-- Main Transcription Output Content -->
+    <main class="content-area">
+      <div class="transcript-container" id="transcriptBox" contenteditable="plaintext-only" spellcheck="false"></div>
+
+      <!-- Elegant Floating Placeholder Overlay (Sibling to prevent text pollution) -->
+      <div class="transcript-placeholder" id="emptyPlaceholder">
+        <div class="placeholder-icon-wrap">
+          <svg class="placeholder-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+        </div>
+        <span class="placeholder-text">Натисніть <strong>Запис</strong> або утримуйте кнопку для диктування</span>
+        <span class="placeholder-shortcuts">
+          <kbd>Alt+Space</kbd> вікно &middot; <kbd>Ctrl+Shift+R</kbd> запис
+        </span>
+      </div>
+
+      <!-- Footer Info Bar -->
+      <div class="transcript-footer">
+        <span id="activeModeLabel">Чистовик &middot; gemini-3.5-transcribe-live</span>
+        <span id="statsLabel">0 слів &middot; 0 симв.</span>
+      </div>
+    </main>
+
+    <!-- Bottom Action Bar -->
+    <footer class="action-bar">
+      <div class="action-left">
+        <button class="btn-mic" id="btnRecord" title="Почати / зупинити запис">
+          <span id="recordIndicator" class="record-dot"></span>
+          <span id="recordBtnLabel">Запис</span>
+        </button>
+
+        <div class="badge-toggle active" id="badgeAutoCopy" title="Автоматично копіювати текст у буфер при зупинці">
+          <span id="autoCopyCheck" class="toggle-check">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+          <span class="toggle-label">Автокопіювання</span>
+        </div>
+      </div>
+
+      <div class="action-right">
+        <button class="btn-secondary btn-action-copy" id="btnCopy" title="Скопіювати весь текст у буфер обміну">
+          <span class="btn-icon-wrap" id="copyIconWrap">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </span>
+          <span id="copyBtnLabel">Копіювати</span>
+        </button>
+        <button class="btn-secondary btn-action-clear" id="btnClear" title="Очистити поле">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Toast Notification Overlay -->
+    <div class="toast-notice" id="toastNotice">
+      Скопійовано в буфер обміну
+    </div>
+
+    <!-- Subtle Resize Handle Grip -->
+    <div class="resize-handle" id="resizeHandle" title="Зміна розміру вікна"></div>
+
+    <!-- Full Settings Drawer / Overlay -->
+    <div class="settings-drawer" id="settingsDrawer">
+      <div class="settings-header">
+        <div class="settings-title">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span>Налаштування Gemini Live</span>
+        </div>
+        <button class="btn-icon" id="btnCloseSettings" title="Зберегти та закрити" aria-label="Close settings">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="6" y1="18" x2="18" y2="6"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="settings-body">
+        
+        <!-- Gemini API Key -->
+        <div class="settings-section">
+          <label class="section-label">Google AI Studio API Key</label>
+          <div class="input-group">
+            <input type="password" class="input-text" id="inputApiKey" placeholder="Введіть AIzaSy... API ключ" />
+            <button class="btn-icon" id="btnToggleKeyVisibility" title="Показати/приховати" aria-label="Toggle key visibility">
+              <svg id="eyeIcon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <span class="section-hint">Отримайте ключ на aistudio.google.com</span>
+        </div>
+
+        <!-- Mode Selection -->
+        <div class="settings-section">
+          <label class="section-label">Режим обробки мовлення</label>
+          <select class="input-select" id="selectMode">
+            <option value="smart_polish">Чистовик (Smart Polish) — без слів-паразитів, з пунктуацією</option>
+            <option value="verbatim">Стенограма (Verbatim) — точний дослівний стенограф</option>
+            <option value="live_translate">Переклад (Live Translate) — переклад наживо на обрану мову</option>
+          </select>
+        </div>
+
+        <!-- Target Language (for translation mode) -->
+        <div class="settings-section" id="sectionTargetLang">
+          <label class="section-label">Мова перекладу (Live Translate)</label>
+          <select class="input-select" id="selectTargetLang">
+            <option value="English">English (Англійська)</option>
+            <option value="Ukrainian">Українська (Ukrainian)</option>
+            <option value="Polish">Polski (Польська)</option>
+            <option value="German">Deutsch (Німецька)</option>
+            <option value="Spanish">Español (Іспанська)</option>
+            <option value="French">Français (Французька)</option>
+            <option value="Italian">Italiano (Італійська)</option>
+            <option value="Portuguese">Português (Португальська)</option>
+            <option value="Japanese">日本語 (Японська)</option>
+            <option value="Chinese">中文 (Китайська)</option>
+          </select>
+        </div>
+
+        <!-- Gemini Model -->
+        <div class="settings-section">
+          <label class="section-label">Модель Gemini Live API</label>
+          <select class="input-select" id="selectModel">
+            <option value="gemini-3.5-transcribe-live">Gemini 3.5 Transcribe Live (ШІ Транскрипція)</option>
+            <option value="gemini-3.5-live-translate-preview">Gemini 3.5 Live Translate (ШІ Переклад наживо)</option>
+            <option value="custom">Власна модель (Custom ID)...</option>
+          </select>
+        </div>
+
+        <!-- Custom Model Input (shown if custom is selected) -->
+        <div class="settings-section" id="sectionCustomModel" style="display: none;">
+          <label class="section-label">Ідентифікатор власної моделі</label>
+          <div class="input-group">
+            <input type="text" class="input-text" id="inputCustomModel" placeholder="напр. gemini-3.5-transcribe-live або models/..." />
+          </div>
+          <span class="section-hint">Введіть точний ID моделі з Google AI Studio. Префікс 'models/' додається автоматично.</span>
+        </div>
+
+        <!-- Recording Behavior -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Поведінка запису</span>
+            <span class="setting-desc">Клік для старту/стопу або Push-to-Talk (утримання)</span>
+          </div>
+          <select class="input-select select-compact" id="selectRecordingBehavior">
+            <option value="toggle">Toggle (Клік)</option>
+            <option value="push_to_talk">Push-to-Talk</option>
+          </select>
+        </div>
+
+        <!-- Font Size -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Розмір шрифту</span>
+            <span class="setting-desc">Розмір тексту стенограми</span>
+          </div>
+          <select class="input-select select-compact" id="selectFontSize">
+            <option value="small">Дрібний (11px)</option>
+            <option value="medium" selected>Середній (13px)</option>
+            <option value="large">Великий (15px)</option>
+          </select>
+        </div>
+
+        <!-- Auto-Copy to Clipboard -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Автокопіювання у буфер</span>
+            <span class="setting-desc">Копіювати текст при завершенні фрази</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="checkAutoCopy" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Always on Top -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Завжди поверх усіх вікон</span>
+            <span class="setting-desc">Вікно залишається на передньому плані</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="checkAlwaysOnTop" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- VAD Silence Timeout -->
+        <div class="settings-section">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Тайм-аут тиші (VAD Silence)</span>
+              <span class="setting-desc">Час тиші перед завершенням репліки</span>
+            </div>
+            <span class="slider-val" id="valSilenceTimeout">1.8 с</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" class="input-range" id="rangeSilenceTimeout" min="800" max="4000" step="200" value="1800">
+          </div>
+        </div>
+
+        <!-- VAD Sensitivity & Mic Meter -->
+        <div class="settings-section">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Поріг гучності VAD</span>
+              <span class="setting-desc">Рівень відсікання фонового шуму</span>
+            </div>
+            <span class="slider-val" id="valVadThreshold">0.018</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" class="input-range" id="rangeVadThreshold" min="5" max="60" step="1" value="18">
+          </div>
+        </div>
+
+        <!-- Global Hotkeys -->
+        <div class="settings-section">
+          <label class="section-label">Хоткей показати / сховати</label>
+          <div class="input-group">
+            <input type="text" class="input-text" id="inputGlobalHotkey" value="Alt+Space" placeholder="Alt+Space" />
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <label class="section-label">Хоткей запису</label>
+          <div class="input-group">
+            <input type="text" class="input-text" id="inputRecordHotkey" value="CommandOrControl+Shift+R" placeholder="CommandOrControl+Shift+R" />
+          </div>
+        </div>
+
+        <!-- Custom Prompt Instructions -->
+        <div class="settings-section">
+          <label class="section-label">Додаткові інструкції (Промпт)</label>
+          <div class="input-group input-group-area">
+            <textarea class="input-text input-textarea" id="inputCustomInstructions" rows="2" placeholder="Специфічні правила, терміни, формат виводу..."></textarea>
+          </div>
+        </div>
+
+        <!-- Window Opacity -->
+        <div class="settings-section">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Прозорість вікна</span>
+            </div>
+            <span class="slider-val" id="valOpacity">98%</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" class="input-range" id="rangeOpacity" min="60" max="100" step="2" value="98">
+          </div>
+        </div>
+
+        <!-- Microphone Selector -->
+        <div class="settings-section">
+          <label class="section-label">Мікрофон</label>
+          <select class="input-select" id="selectAudioDevice">
+            <option value="">За замовчуванням (Default)</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="settings-footer">
+        <button class="btn-secondary" id="btnResetSettings">Скинути</button>
+        <button class="btn-primary" id="btnSaveSettings">Зберегти</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="text-cleaner.js"></script>
+  <script src="fast-translator.js"></script>
+  <script src="prompts.js"></script>
+  <script src="storage.js"></script>
+  <script src="audio-processor.js"></script>
+  <script src="gemini-live-client.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
