@@ -102,7 +102,7 @@ npm start
 ```
 
 #### Run Automated Test Suite
-The project contains 82 comprehensive automated unit and integration tests:
+The project contains 86 comprehensive automated unit and integration tests:
 ```bash
 npm test
 ```

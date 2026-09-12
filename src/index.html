@@ -228,18 +228,18 @@
           </select>
         </div>
 
-        <!-- Spoken Language (Priority to prevent wrong language hallucinations) -->
+        <!-- Spoken Language Lock (Strict single-language lock to eliminate wrong-language hallucinations) -->
         <div class="settings-section">
-          <label class="section-label">Основна мова мовлення (пріоритет)</label>
+          <label class="section-label">Фіксація мови мовлення (блокування інших мов)</label>
           <select class="input-select" id="selectSpokenLanguage">
-            <option value="uk">Українська (UK) — пріоритет (запобігає помилкам на перших словах)</option>
-            <option value="en">English (EN) — пріоритет англійської</option>
-            <option value="pl">Polski (PL) — пріоритет польської</option>
-            <option value="de">Deutsch (DE) — пріоритет німецької</option>
-            <option value="es">Español (ES) — пріоритет іспанської</option>
-            <option value="auto">Автовизначення (Auto-detect) — без жорсткої фіксації</option>
+            <option value="uk">🇺🇦 Тільки Українська (Жорстке блокування польської та ін. мов)</option>
+            <option value="en">🇬🇧 Only English (Strict single-language lock)</option>
+            <option value="pl">🇵🇱 Tylko Polski (Strict single-language lock)</option>
+            <option value="de">🇩🇪 Nur Deutsch (Strict single-language lock)</option>
+            <option value="es">🇪🇸 Sólo Español (Strict single-language lock)</option>
+            <option value="auto">🌐 Автовизначення (Без блокування мов)</option>
           </select>
-          <span class="section-hint">Усуває ситуації, коли перші слова розпізнаються іншою мовою.</span>
+          <span class="section-hint">Повністю блокує випадкове розпізнавання польської мови, примушуючи ШІ виводити виключно український текст.</span>
         </div>
 
         <!-- Target Language (for translation) -->

@@ -18,7 +18,7 @@ Rules:
 3. Apply accurate punctuation, capitalization, and logical paragraphs.
 4. Do NOT answer questions or engage in conversation.
 5. Output ONLY the polished transcription. Never prepend prefixes like 'Transcript:' or 'Here is...'.
-6. CRITICAL: Preserve the exact language spoken by the user (Ukrainian remains Ukrainian, English remains English, etc.). Never translate unless in translation mode.
+6. Language Preservation: Output strictly in the configured language. Never translate unless in translation mode.
 7. If there is silence, background noise, or no clear speech, output absolutely NOTHING.`
   },
 
@@ -34,7 +34,7 @@ Your single job is to transcribe the user's spoken audio verbatim, word for word
 Strict Rules:
 1. Do NOT answer questions, do NOT converse, do NOT add filler words or remarks.
 2. Output ONLY the transcribed words spoken by the user.
-3. Transcribe in the exact language the user speaks (e.g., Ukrainian, English, Polish, etc.). Never translate.
+3. Transcribe in the exact language configured. Never translate or switch to another language.
 4. Add basic capitalization and standard punctuation where pauses occur, but do NOT alter or rephrase any words.
 5. If there is background noise, silence, or non-speech sounds, output absolutely NOTHING.`
   },
@@ -76,32 +76,41 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 const SUPPORTED_SPOKEN_LANGUAGES = [
-  { code: 'uk', name: 'Українська (Ukrainian)', flag: '🇺🇦' },
-  { code: 'en', name: 'English (Англійська)', flag: '🇬🇧' },
-  { code: 'pl', name: 'Polski (Польська)', flag: '🇵🇱' },
-  { code: 'de', name: 'Deutsch (Німецька)', flag: '🇩🇪' },
-  { code: 'es', name: 'Español (Іспанська)', flag: '🇪🇸' },
-  { code: 'auto', name: 'Автовизначення (Auto-detect)', flag: '🌐' }
+  { code: 'uk', name: '🇺🇦 Тільки Українська (Жорстке блокування інших мов)', flag: '🇺🇦' },
+  { code: 'en', name: '🇬🇧 Only English (Strict lock)', flag: '🇬🇧' },
+  { code: 'pl', name: '🇵🇱 Tylko Polski (Strict lock)', flag: '🇵🇱' },
+  { code: 'de', name: '🇩🇪 Nur Deutsch (Strict lock)', flag: '🇩🇪' },
+  { code: 'es', name: '🇪🇸 Sólo Español (Strict lock)', flag: '🇪🇸' },
+  { code: 'auto', name: '🌐 Автовизначення (Auto-detect)', flag: '🌐' }
 ];
 
 const SPOKEN_LANG_DIRECTIVES = {
-  uk: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
-- The user is speaking UKRAINIAN (Українська мова).
-- You MUST transcribe and process all spoken audio strictly in Ukrainian.
-- Even if initial words, short syllables, or ambiguous sounds phonetically resemble Russian or other Slavic languages (e.g. "привіт", "так", "добре", "ну", "слухай", "дивіться"), ALWAYS prioritize, interpret, and output Ukrainian words using proper Ukrainian orthography (і, ї, є, ґ).
-- NEVER switch to Russian, Polish, or any other language. Ukrainian only.`,
-  en: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
-- The user is speaking ENGLISH.
-- Transcribe and process all spoken audio strictly in English using standard English spelling.`,
-  pl: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
-- The user is speaking POLISH (Język polski).
-- Transcribe and process all spoken audio strictly in Polish with proper Polish diacritics (ą, ć, ę, ł, ń, ó, ś, ź, ż).`,
-  de: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
-- The user is speaking GERMAN (Deutsch).
-- Transcribe and process all spoken audio strictly in German with proper umlauts and capitalization.`,
-  es: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
-- The user is speaking SPANISH (Español).
-- Transcribe and process all spoken audio strictly in Spanish.`,
+  uk: `MANDATORY SINGLE-LANGUAGE LOCK: UKRAINIAN (УКРАЇНСЬКА МОВА) ONLY.
+YOU ARE CONFIGURED EXCLUSIVELY AS A UKRAINIAN SPEECH TRANSCRIBER.
+THE SPEAKER IS SPEAKING UKRAINIAN.
+CRITICAL ENFORCEMENT RULES:
+1. ZERO-TOLERANCE FOR POLISH OR RUSSIAN: Under NO circumstances should you ever output Polish (język polski), Russian, or any other language.
+2. POLISH IS STRICTLY FORBIDDEN: Never output Polish words (such as "tak", "dobrze", "dzień", "co", "jest", "bardzo", "proszę", "nie", "się", "dla", "chcę", "może", "kiedy", "gdzie") or Polish Latin diacritics (ą, ć, ę, ł, ń, ó, ś, ź, ż).
+3. If any spoken word, syllable, or sound phonetically resembles Polish or Russian, you MUST FORCEFULLY interpret and transcribe it as the corresponding Ukrainian word in Ukrainian Cyrillic (e.g. "так", "добре", "день", "що", "є", "дуже", "прошу", "ні", "для", "хочу", "може", "коли", "де").
+4. ALL output text MUST be written 100% in the Ukrainian Cyrillic alphabet (а-я, і, ї, є, ґ). Only widely recognized international brand or tech names (e.g., Discord, Google, Windows) may appear in Latin.
+5. DO NOT ATTEMPT TO AUTO-DETECT OR SWITCH LANGUAGES. The user is speaking Ukrainian. Transcribe strictly in Ukrainian.
+6. If the audio is unclear, output NOTHING. Never guess in Polish or another language.`,
+  en: `MANDATORY SINGLE-LANGUAGE LOCK: ENGLISH ONLY.
+YOU ARE CONFIGURED EXCLUSIVELY AS AN ENGLISH SPEECH TRANSCRIBER.
+THE SPEAKER IS SPEAKING ENGLISH.
+Transcribe and process all spoken audio strictly in English using standard English spelling.`,
+  pl: `MANDATORY SINGLE-LANGUAGE LOCK: POLISH (JĘZYK POLSKI) ONLY.
+YOU ARE CONFIGURED EXCLUSIVELY AS A POLISH SPEECH TRANSCRIBER.
+THE SPEAKER IS SPEAKING POLISH.
+Transcribe and process all spoken audio strictly in Polish with proper Polish diacritics (ą, ć, ę, ł, ń, ó, ś, ź, ż).`,
+  de: `MANDATORY SINGLE-LANGUAGE LOCK: GERMAN (DEUTSCH) ONLY.
+YOU ARE CONFIGURED EXCLUSIVELY AS A GERMAN SPEECH TRANSCRIBER.
+THE SPEAKER IS SPEAKING GERMAN.
+Transcribe and process all spoken audio strictly in German with proper umlauts and capitalization.`,
+  es: `MANDATORY SINGLE-LANGUAGE LOCK: SPANISH (ESPAÑOL) ONLY.
+YOU ARE CONFIGURED EXCLUSIVELY AS A SPANISH SPEECH TRANSCRIBER.
+THE SPEAKER IS SPEAKING SPANISH.
+Transcribe and process all spoken audio strictly in Spanish.`,
   auto: `SPOKEN LANGUAGE DIRECTIVE:
 - Detect the spoken language automatically.
 - Output text in the exact language spoken by the user without translating.`
@@ -115,20 +124,25 @@ const SPOKEN_LANG_DIRECTIVES = {
  */
 function getSystemPrompt(modeId, options = {}) {
   const mode = MODES[modeId] || MODES.smart_polish;
-  let prompt = '';
+  let basePrompt = '';
   if (typeof mode.systemPrompt === 'function') {
-    prompt = mode.systemPrompt(options.targetLanguage || 'English');
+    basePrompt = mode.systemPrompt(options.targetLanguage || 'English');
   } else {
-    prompt = mode.systemPrompt;
+    basePrompt = mode.systemPrompt;
   }
 
-  // Inject spoken language directive for transcription modes to prevent wrong-language hallucination
+  let prompt = '';
+  // Prepend spoken language lock as the top priority directive for transcription modes
   if (modeId === 'smart_polish' || modeId === 'verbatim') {
     const lang = options.spokenLanguage || 'uk';
     const directive = SPOKEN_LANG_DIRECTIVES[lang] || SPOKEN_LANG_DIRECTIVES.uk;
     if (directive) {
-      prompt += `\n\n${directive}`;
+      prompt = `${directive}\n\n${basePrompt}`;
+    } else {
+      prompt = basePrompt;
     }
+  } else {
+    prompt = basePrompt;
   }
 
   if (options.customInstructions && options.customInstructions.trim()) {

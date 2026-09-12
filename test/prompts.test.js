@@ -74,13 +74,13 @@ describe('Prompts and Modes Configuration Tests', () => {
 
   it('getSystemPrompt should inject strong Ukrainian spoken language directive by default', () => {
     const defaultPrompt = getSystemPrompt('smart_polish');
-    assert.ok(defaultPrompt.includes('PRIMARY SPOKEN LANGUAGE DIRECTIVE'));
+    assert.ok(defaultPrompt.includes('MANDATORY SINGLE-LANGUAGE LOCK: UKRAINIAN'));
     assert.ok(defaultPrompt.includes('UKRAINIAN'));
-    assert.ok(defaultPrompt.includes('NEVER switch to Russian'));
+    assert.ok(defaultPrompt.includes('POLISH IS STRICTLY FORBIDDEN'));
     assert.ok(defaultPrompt.includes('і, ї, є, ґ'));
 
     const explicitUkPrompt = getSystemPrompt('verbatim', { spokenLanguage: 'uk' });
-    assert.ok(explicitUkPrompt.includes('PRIMARY SPOKEN LANGUAGE DIRECTIVE'));
+    assert.ok(explicitUkPrompt.includes('MANDATORY SINGLE-LANGUAGE LOCK: UKRAINIAN'));
     assert.ok(explicitUkPrompt.includes('UKRAINIAN'));
   });
 

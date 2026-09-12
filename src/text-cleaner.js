@@ -4,14 +4,155 @@
  */
 
 /**
+ * Detect if text contains distinct Polish characters, Cyrillic phonetic Polish transliterations,
+ * or typical Polish vocabulary.
+ * @param {string} text
+ * @returns {boolean}
+ */
+function hasPolishIndicators(text) {
+  if (!text || typeof text !== 'string') return false;
+  // Distinctive Polish Latin letters
+  if (/[ąćęłńśźżĄĆĘŁŃŚŹŻ]/.test(text)) return true;
+  // Distinctive Polish words (Latin and Cyrillic transliterations)
+  const polishIndicatorsRegex = /(?<!\p{L})(?:dzień|dobry|dobrze|proszę|prosze|dziękuję|dziekuje|bardzo|przepraszam|oczywiście|oczywiscie|nie\s+wiem|jak\s+się\s+masz|jak\s+sie\s+masz|co\s+tam\s+słychać|jestem|jesteś|jestes|chcę|chce|chciałbym|będzie|bedzie|będziemy|będą|człowiek|ludzie|dlaczego|kiedy|teraz|wszystko|to\s+jest|nie\s+rozumiem|słucham|mówię|pamiętam|naprawdę|życie|szczęście|dziecko|dzieci|pieniądze|бардзо|дзєнь|дзень|пшепрашам|перепрашам|проше|дзєкую|дзенкую|цо\s+то|цось|людзє|єстем|панство)(?!\p{L})/iu;
+  return polishIndicatorsRegex.test(text);
+}
+
+/**
+ * Filter and convert accidental Polish/foreign hallucinations into proper Ukrainian
+ * when the Ukrainian language lock is active.
+ * @param {string} text
+ * @param {string} [spokenLanguage='uk']
+ * @returns {string}
+ */
+function filterLanguageLock(text, spokenLanguage = 'uk') {
+  if (!text || typeof text !== 'string') return '';
+  if (spokenLanguage !== 'uk') return text;
+
+  let filtered = text;
+
+  // 1. Common Polish multi-word expressions -> Ukrainian
+  const polishMultiWordMap = [
+    [/(?<!\p{L})(?:dzień\s+dobry|dzien\s+dobry|дзєнь\s+добри|дзень\s+добри)(?!\p{L})/giu, 'добрий день'],
+    [/(?<!\p{L})(?:dobry\s+wieczór|dobry\s+wieczor|добри\s+вечор)(?!\p{L})/giu, 'добрий вечір'],
+    [/(?<!\p{L})(?:jak\s+się\s+masz|jak\s+sie\s+masz|co\s+tam\s+słychać|co\s+tam\s+slychac|як\s+сє\s+маш|як\s+се\s+маш)(?!\p{L})/giu, 'як справи'],
+    [/(?<!\p{L})(?:nie\s+wiem|нє\s+вєм|не\s+вєм)(?!\p{L})/giu, 'не знаю'],
+    [/(?<!\p{L})(?:nie\s+rozumiem)(?!\p{L})/giu, 'не розумію'],
+    [/(?<!\p{L})(?:to\s+jest|то\s+єст)(?!\p{L})/giu, 'це'],
+    [/(?<!\p{L})(?:wszystko\s+w\s+porządku|wszystko\s+w\s+porzadku)(?!\p{L})/giu, 'все гаразд'],
+    [/(?<!\p{L})(?:цо\s+то\s+єст|цо\s+то\s+є)(?!\p{L})/giu, 'що це'],
+    [/(?<!\p{L})(?:проше\s+бардзо)(?!\p{L})/giu, 'будь ласка'],
+    [/(?<!\p{L})(?:може\s+биць)(?!\p{L})/giu, 'може бути'],
+    [/(?<!\p{L})(?:bardzo\s+dobrze|бардзо\s+добже|бардзо\s+добре)(?!\p{L})/giu, 'дуже добре'],
+    [/(?<!\p{L})(?:dziękuję\s+bardzo|dziekuje\s+bardzo|бардзо\s+дзєкую)(?!\p{L})/giu, 'дякую дуже'],
+    [/(?<!\p{L})(?:za\s+pomoc|za\s+pomocą)(?!\p{L})/giu, 'за допомогу']
+  ];
+
+  for (const [regex, replacement] of polishMultiWordMap) {
+    filtered = filtered.replace(regex, replacement);
+  }
+
+  // 2. Cyrillic phonetic Polish transliterations -> standard Ukrainian
+  const cyrillicPolishMap = [
+    [/(?<!\p{L})бардзо(?!\p{L})/giu, 'дуже'],
+    [/(?<!\p{L})пшепрашам(?!\p{L})/giu, 'вибачте'],
+    [/(?<!\p{L})перепрашам(?!\p{L})/giu, 'перепрошую'],
+    [/(?<!\p{L})проше(?!\p{L})/giu, 'прошу'],
+    [/(?<!\p{L})дзєкую(?!\p{L})/giu, 'дякую'],
+    [/(?<!\p{L})дзенкую(?!\p{L})/giu, 'дякую'],
+    [/(?<!\p{L})цось(?!\p{L})/giu, 'щось'],
+    [/(?<!\p{L})цо(?!\p{L})/giu, 'що'],
+    [/(?<!\p{L})гдзє(?!\p{L})/giu, 'де'],
+    [/(?<!\p{L})хце(?!\p{L})/giu, 'хочу'],
+    [/(?<!\p{L})встистко(?!\p{L})/giu, 'все'],
+    [/(?<!\p{L})вшистко(?!\p{L})/giu, 'все'],
+    [/(?<!\p{L})ніц(?!\p{L})/giu, 'нічого'],
+    [/(?<!\p{L})єстем(?!\p{L})/giu, 'я є'],
+    [/(?<!\p{L})людзє(?!\p{L})/giu, 'люди'],
+    [/(?<!\p{L})дзєцько(?!\p{L})/giu, 'дитина'],
+    [/(?<!\p{L})дзєци(?!\p{L})/giu, 'діти'],
+    [/(?<!\p{L})панство(?!\p{L})/giu, 'панове']
+  ];
+
+  for (const [regex, replacement] of cyrillicPolishMap) {
+    filtered = filtered.replace(regex, replacement);
+  }
+
+  // 3. Single Polish words with Polish diacritics or distinctive vocabulary -> Ukrainian
+  const polishSingleWordMap = [
+    [/(?<!\p{L})(?:proszę|prosze)(?!\p{L})/giu, 'будь ласка'],
+    [/(?<!\p{L})(?:dziękuję|dziekuje)(?!\p{L})/giu, 'дякую'],
+    [/(?<!\p{L})(?:dobrze)(?!\p{L})/giu, 'добре'],
+    [/(?<!\p{L})(?:bardzo)(?!\p{L})/giu, 'дуже'],
+    [/(?<!\p{L})(?:przepraszam)(?!\p{L})/giu, 'вибачте'],
+    [/(?<!\p{L})(?:oczywiście|oczywiscie)(?!\p{L})/giu, 'звісно'],
+    [/(?<!\p{L})(?:jestem)(?!\p{L})/giu, 'я є'],
+    [/(?<!\p{L})(?:jesteś|jestes)(?!\p{L})/giu, 'ти є'],
+    [/(?<!\p{L})(?:chcę|chce)(?!\p{L})/giu, 'хочу'],
+    [/(?<!\p{L})(?:chciałbym|chcialbym)(?!\p{L})/giu, 'я хотів би'],
+    [/(?<!\p{L})(?:będzie|bedzie)(?!\p{L})/giu, 'буде'],
+    [/(?<!\p{L})(?:będziemy|bedziemy)(?!\p{L})/giu, 'будемо'],
+    [/(?<!\p{L})(?:będą|beda)(?!\p{L})/giu, 'будуть'],
+    [/(?<!\p{L})(?:mamy)(?!\p{L})/giu, 'маємо'],
+    [/(?<!\p{L})(?:macie)(?!\p{L})/giu, 'маєте'],
+    [/(?<!\p{L})(?:masz)(?!\p{L})/giu, 'маєш'],
+    [/(?<!\p{L})(?:człowiek|czlowiek)(?!\p{L})/giu, 'людина'],
+    [/(?<!\p{L})(?:ludzie)(?!\p{L})/giu, 'люди'],
+    [/(?<!\p{L})(?:dlaczego)(?!\p{L})/giu, 'чому'],
+    [/(?<!\p{L})(?:kiedy)(?!\p{L})/giu, 'коли'],
+    [/(?<!\p{L})(?:gdzie)(?!\p{L})/giu, 'де'],
+    [/(?<!\p{L})(?:teraz)(?!\p{L})/giu, 'зараз'],
+    [/(?<!\p{L})(?:wszystko)(?!\p{L})/giu, 'все'],
+    [/(?<!\p{L})(?:słucham|slucham)(?!\p{L})/giu, 'слухаю'],
+    [/(?<!\p{L})(?:mówię|mowie)(?!\p{L})/giu, 'говорю'],
+    [/(?<!\p{L})(?:widzę|widze)(?!\p{L})/giu, 'бачу'],
+    [/(?<!\p{L})(?:wiem)(?!\p{L})/giu, 'знаю'],
+    [/(?<!\p{L})(?:pamiętam|pamietam)(?!\p{L})/giu, 'пам\'ятаю'],
+    [/(?<!\p{L})(?:naprawdę|naprawde)(?!\p{L})/giu, 'справді'],
+    [/(?<!\p{L})(?:życie|zycie)(?!\p{L})/giu, 'життя'],
+    [/(?<!\p{L})(?:szczęście|szczescie)(?!\p{L})/giu, 'щастя'],
+    [/(?<!\p{L})(?:dziecko)(?!\p{L})/giu, 'дитина'],
+    [/(?<!\p{L})(?:dzieci)(?!\p{L})/giu, 'діти'],
+    [/(?<!\p{L})(?:pieniądze|pieniadze)(?!\p{L})/giu, 'гроші'],
+    [/(?<!\p{L})(?:pięć|piec)(?!\p{L})/giu, 'п\'ять'],
+    [/(?<!\p{L})(?:sześć|szesc)(?!\p{L})/giu, 'шість']
+  ];
+
+  for (const [regex, replacement] of polishSingleWordMap) {
+    filtered = filtered.replace(regex, replacement);
+  }
+
+  // 4. If text contains Polish context, convert common particles
+  if (/[ąćęłńśźżĄĆĘŁŃŚŹŻ]/.test(text) || /(?<!\p{L})(?:się|sie|jest|dla|ale|oraz|tylko|przez|może|moze)(?!\p{L})/iu.test(text)) {
+    filtered = filtered.replace(/(?<!\p{L})(?:się|sie)(?!\p{L})/giu, '');
+    filtered = filtered.replace(/(?<!\p{L})jest(?!\p{L})/giu, 'є');
+    filtered = filtered.replace(/(?<!\p{L})co(?!\p{L})/giu, 'що');
+    filtered = filtered.replace(/(?<!\p{L})jak(?!\p{L})/giu, 'як');
+    filtered = filtered.replace(/(?<!\p{L})ale(?!\p{L})/giu, 'але');
+    filtered = filtered.replace(/(?<!\p{L})dla(?!\p{L})/giu, 'для');
+    filtered = filtered.replace(/(?<!\p{L})przez(?!\p{L})/giu, 'через');
+    filtered = filtered.replace(/(?<!\p{L})tylko(?!\p{L})/giu, 'лише');
+    filtered = filtered.replace(/(?<!\p{L})może(?!\p{L})/giu, 'може');
+    filtered = filtered.replace(/(?<!\p{L})tak(?!\p{L})/giu, 'так');
+    filtered = filtered.replace(/(?<!\p{L})nie(?!\p{L})/giu, 'ні');
+  }
+
+  // 5. Clean up any remaining isolated Polish letters that shouldn't exist in Ukrainian
+  filtered = filtered.replace(/[ąćęłńśźżĄĆĘŁŃŚŹŻ]/g, '');
+
+  return filtered.replace(/[ \t]+/g, ' ').trim();
+}
+
+/**
  * Clean and polish transcription text for smart_polish mode
  * @param {string} text - Raw speech-to-text transcription
+ * @param {string} [spokenLanguage='uk'] - Active spoken language configuration
  * @returns {string} Polished text
  */
-function cleanSmartPolish(text) {
+function cleanSmartPolish(text, spokenLanguage = 'uk') {
   if (!text || typeof text !== 'string') return '';
 
-  let cleaned = text;
+  let cleaned = filterLanguageLock(text, spokenLanguage);
 
   // 1. Remove vocal pauses and vocalizations (Ukrainian, Russian, English)
   // E.g.: "е-е-е", "е-е", "еее", "ее", "є-є", "єєє", "єє", "а-а", "ааа", "ммм", "мм", "гм", "хм", "um", "uh", "er", "erm", "hmm"
@@ -210,6 +351,17 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     cleanSmartPolish,
     extractNewSpeech,
-    stripTailOverlap
+    stripTailOverlap,
+    hasPolishIndicators,
+    filterLanguageLock
   };
 }
+
+if (typeof window !== 'undefined') {
+  window.cleanSmartPolish = cleanSmartPolish;
+  window.extractNewSpeech = extractNewSpeech;
+  window.stripTailOverlap = stripTailOverlap;
+  window.hasPolishIndicators = hasPolishIndicators;
+  window.filterLanguageLock = filterLanguageLock;
+}
+

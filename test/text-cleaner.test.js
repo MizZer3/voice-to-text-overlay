@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
-const { cleanSmartPolish, extractNewSpeech, stripTailOverlap } = require('../src/text-cleaner.js');
+const { cleanSmartPolish, extractNewSpeech, stripTailOverlap, hasPolishIndicators, filterLanguageLock } = require('../src/text-cleaner.js');
 
 describe('Smart Polish Text Cleaner Unit Tests', () => {
   it('should handle empty or non-string inputs safely', () => {
@@ -238,6 +238,46 @@ describe('Smart Polish Text Cleaner Unit Tests', () => {
       assert.strictEqual(combined, 'Перше виправлене речення. Друге речення');
     });
   });
+
+  describe('Language Lock & Polish Filter Tests', () => {
+    it('hasPolishIndicators should correctly detect Polish Latin diacritics and vocabulary', () => {
+      assert.strictEqual(hasPolishIndicators('Dzień dobry, jak się masz?'), true);
+      assert.strictEqual(hasPolishIndicators('Dziękuję bardzo'), true);
+      assert.strictEqual(hasPolishIndicators('Proszę pana'), true);
+      assert.strictEqual(hasPolishIndicators('дзєнь добри, бардзо дякую'), true);
+      assert.strictEqual(hasPolishIndicators('пшепрашам, цо то єст?'), true);
+
+      // Ukrainian and English text should not trigger
+      assert.strictEqual(hasPolishIndicators('Доброго дня, як ваші справи?'), false);
+      assert.strictEqual(hasPolishIndicators('Hello world, everything is fine.'), false);
+      assert.strictEqual(hasPolishIndicators('Я хочу перевірити роботу мікрофона.'), false);
+    });
+
+    it('filterLanguageLock should convert Polish phrases and words to Ukrainian when uk is locked', () => {
+      assert.strictEqual(filterLanguageLock('Dzień dobry!'), 'добрий день!');
+      assert.strictEqual(filterLanguageLock('Dziękuję bardzo za pomoc'), 'дякую дуже за допомогу');
+      assert.strictEqual(filterLanguageLock('Proszę, to jest bardzo dobrze'), 'будь ласка, це дуже добре');
+      assert.strictEqual(filterLanguageLock('дзєнь добри, бардзо дякую!'), 'добрий день, дуже дякую!');
+      assert.strictEqual(filterLanguageLock('пшепрашам, я не знаю цо то єст'), 'вибачте, я не знаю що це');
+    });
+
+    it('filterLanguageLock should not alter non-uk languages when another lock is active', () => {
+      const polishText = 'Dzień dobry, jak się masz?';
+      assert.strictEqual(filterLanguageLock(polishText, 'pl'), polishText);
+      assert.strictEqual(filterLanguageLock(polishText, 'en'), polishText);
+    });
+
+    it('cleanSmartPolish should automatically apply language lock and filter Polish hallucinations', () => {
+      const input = 'ну е-е-е дзєнь добри, бардзо дякую';
+      const output = cleanSmartPolish(input, 'uk');
+      assert.strictEqual(output, 'Добрий день, дуже дякую');
+
+      const input2 = 'Dzień dobry! Як ваші справи?';
+      const output2 = cleanSmartPolish(input2, 'uk');
+      assert.strictEqual(output2, 'Добрий день! Як ваші справи?');
+    });
+  });
 });
+
 
 

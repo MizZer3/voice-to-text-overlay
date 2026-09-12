@@ -241,7 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const modeObj = MODES[activeMode] || MODES.smart_polish;
     const modelDisplay = config.model || 'gemini-3.5-transcribe-live';
-    activeModeLabel.textContent = `${modeObj.name} · ${modelDisplay}`;
+    const langBadge = (config.spokenLanguage || 'uk') === 'uk' ? '🇺🇦 UA' : ((config.spokenLanguage === 'en') ? '🇬🇧 EN' : ((config.spokenLanguage === 'pl') ? '🇵🇱 PL' : ((config.spokenLanguage === 'de') ? '🇩🇪 DE' : ((config.spokenLanguage === 'es') ? '🇪🇸 ES' : '🌐 AUTO'))));
+    activeModeLabel.textContent = `${modeObj.name} · ${langBadge} · ${modelDisplay}`;
   }
 
   /**
@@ -800,8 +801,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawSpeech = typeof extractNewSpeech === 'function' ? extractNewSpeech(fullText, rawCheckpoint) : fullText;
 
         let displayText = rawSpeech;
+        if (typeof filterLanguageLock === 'function') {
+          displayText = filterLanguageLock(displayText, config.spokenLanguage || 'uk');
+        }
         if (config.mode === 'smart_polish' && typeof cleanSmartPolish === 'function') {
-          displayText = cleanSmartPolish(rawSpeech);
+          displayText = cleanSmartPolish(displayText, config.spokenLanguage || 'uk');
           if (sessionBaseText && typeof stripTailOverlap === 'function') {
             displayText = stripTailOverlap(sessionBaseText, displayText);
           }
@@ -815,8 +819,33 @@ document.addEventListener('DOMContentLoaded', () => {
       liveClient.onTurnComplete = async (turnText, utteranceIndex) => {
         if (!turnText || !turnText.trim()) return;
 
+        let processedTurn = turnText;
+        if (typeof filterLanguageLock === 'function') {
+          processedTurn = filterLanguageLock(processedTurn, config.spokenLanguage || 'uk');
+        }
+
+        // Background safeguard: if configured for Ukrainian and Polish indicators remain, translate back to Ukrainian
+        if ((config.spokenLanguage || 'uk') === 'uk' && typeof hasPolishIndicators === 'function' && hasPolishIndicators(processedTurn)) {
+          if (config.apiKey && typeof translateText === 'function') {
+            try {
+              const ukrainianTurn = await translateText(processedTurn, 'Ukrainian', config.apiKey);
+              if (ukrainianTurn && ukrainianTurn !== processedTurn) {
+                processedTurn = ukrainianTurn;
+                if (typeof utteranceIndex === 'number' && utteranceIndex >= 0 && liveClient) {
+                  liveClient.updateUtterance(utteranceIndex, ukrainianTurn);
+                  currentFullText = (sessionBaseText ? `${sessionBaseText} ${ukrainianTurn}` : ukrainianTurn).trim();
+                  renderTranscript(currentFullText);
+                  updateWordStats(currentFullText);
+                }
+              }
+            } catch (e) {
+              console.warn('Auto-conversion from Polish to Ukrainian failed:', e);
+            }
+          }
+        }
+
         if (typeof utteranceIndex === 'number' && utteranceIndex >= 0) {
-          lastCommittedUtterances[utteranceIndex] = turnText;
+          lastCommittedUtterances[utteranceIndex] = processedTurn;
         }
 
         if (config.autoCopy && isRecording) {
@@ -926,8 +955,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const finalRaw = liveClient.getFullText();
       const newSpeech = typeof extractNewSpeech === 'function' ? extractNewSpeech(finalRaw, rawCheckpoint) : finalRaw;
       let cleaned = newSpeech;
+      if (typeof filterLanguageLock === 'function') {
+        cleaned = filterLanguageLock(cleaned, config.spokenLanguage || 'uk');
+      }
       if (config.mode === 'smart_polish' && typeof cleanSmartPolish === 'function') {
-        cleaned = cleanSmartPolish(newSpeech);
+        cleaned = cleanSmartPolish(cleaned, config.spokenLanguage || 'uk');
         if (sessionBaseText && typeof stripTailOverlap === 'function') {
           cleaned = stripTailOverlap(sessionBaseText, cleaned);
         }
@@ -1048,8 +1080,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let textToPaste = (text || currentFullText || (transcriptBox && transcriptBox.innerText) || '').trim();
     if (!textToPaste) return;
 
+    if (typeof filterLanguageLock === 'function') {
+      textToPaste = filterLanguageLock(textToPaste, config.spokenLanguage || 'uk');
+    }
     if (config.mode === 'smart_polish' && typeof cleanSmartPolish === 'function') {
-      textToPaste = cleanSmartPolish(textToPaste);
+      textToPaste = cleanSmartPolish(textToPaste, config.spokenLanguage || 'uk');
     }
 
     if (window.electronAPI && window.electronAPI.pasteToActiveWindow) {
@@ -1084,8 +1119,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let textToCopy = (currentFullText || transcriptBox.innerText || '').trim();
     if (!textToCopy) return;
 
+    if (typeof filterLanguageLock === 'function') {
+      textToCopy = filterLanguageLock(textToCopy, config.spokenLanguage || 'uk');
+    }
     if (config.mode === 'smart_polish' && typeof cleanSmartPolish === 'function') {
-      textToCopy = cleanSmartPolish(textToCopy);
+      textToCopy = cleanSmartPolish(textToCopy, config.spokenLanguage || 'uk');
     }
 
     try {
