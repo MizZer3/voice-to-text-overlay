@@ -542,6 +542,8 @@ kbd {
   flex-shrink: 0;
   letter-spacing: 0.1px;
   gap: 8px;
+}
+
 #activeModeLabel {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -563,17 +565,17 @@ kbd {
   align-items: center;
   justify-content: space-between;
   height: 38px;
-  padding: 0 10px;
+  padding: 0 8px;
   background: var(--bg-header);
   border-top: 1px solid var(--border-subtle);
   flex-shrink: 0;
-  gap: 6px;
+  gap: 4px;
 }
 
 .action-left {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .action-right {
@@ -586,9 +588,9 @@ kbd {
 .btn-mic {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   height: 25px;
-  padding: 0 10px;
+  padding: 0 8px;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 500;
@@ -597,6 +599,7 @@ kbd {
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.18s ease;
+  white-space: nowrap;
 }
 
 .record-dot {
@@ -645,20 +648,22 @@ kbd {
   100% { box-shadow: 0 0 8px rgba(244, 63, 94, 0.3); }
 }
 
-/* Compact Auto-Copy Badge */
+/* Compact Auto-Copy & Direct Paste Badges */
 .badge-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 23px;
-  padding: 0 7px;
-  border-radius: 5px;
-  font-size: 9.5px;
+  gap: 4px;
+  height: 25px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 10px;
   background: var(--bg-surface);
   border: 1px solid var(--border-card);
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .badge-toggle:hover {
@@ -699,7 +704,7 @@ kbd {
   align-items: center;
   gap: 4px;
   height: 25px;
-  padding: 0 8px;
+  padding: 0 7px;
   border-radius: 6px;
   font-size: 10.5px;
   font-weight: 500;
@@ -708,6 +713,7 @@ kbd {
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .btn-icon-wrap {
@@ -1144,3 +1150,25 @@ input:checked + .slider:before {
 .resize-handle:hover {
   opacity: 0.8;
 }
+
+/* Responsive media queries for compact window sizes */
+@media (max-width: 375px) {
+  .badge-toggle .toggle-label {
+    display: none;
+  }
+  .badge-toggle {
+    padding: 0;
+    width: 25px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 335px) {
+  #copyBtnLabel, #translateBtnLabel {
+    display: none;
+  }
+  .btn-secondary, .btn-action-translate {
+    padding: 0 5px;
+  }
+}
+

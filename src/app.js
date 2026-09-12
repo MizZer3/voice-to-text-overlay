@@ -766,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isShowingTranslation) {
         isShowingTranslation = false;
         originalTextBeforeTranslate = null;
-        if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+        if (translateBtnLabel) translateBtnLabel.textContent = 'Переклад';
         if (btnTranslateText) btnTranslateText.classList.remove('active-translated', 'loading');
       }
 
@@ -1112,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
             copyIconWrap.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
           }
           if (copyBtnLabel) {
-            copyBtnLabel.textContent = 'Копіювати';
+            copyBtnLabel.textContent = 'Копія';
           }
           if (!isRecording) {
             setStatus('idle', 'Очікування');
@@ -1135,7 +1135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentFullText = '';
     originalTextBeforeTranslate = null;
     isShowingTranslation = false;
-    if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+    if (translateBtnLabel) translateBtnLabel.textContent = 'Переклад';
     if (btnTranslateText) btnTranslateText.classList.remove('active-translated', 'loading');
     lastCommittedUtterances = [];
     if (liveClient) {
@@ -1174,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateWordStats(currentFullText);
       isShowingTranslation = false;
       originalTextBeforeTranslate = null;
-      if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+      if (translateBtnLabel) translateBtnLabel.textContent = 'Переклад';
       if (btnTranslateText) btnTranslateText.classList.remove('active-translated', 'loading');
       showToast('Повернуто оригінальний текст', 2000);
       return;
@@ -1224,13 +1224,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         showToast('Текст уже цією мовою', 2500);
-        if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+        if (translateBtnLabel) translateBtnLabel.textContent = 'Переклад';
         if (btnTranslateText) btnTranslateText.classList.remove('loading');
       }
     } catch (err) {
       console.error('On-demand translation error:', err);
       showToast(`Помилка перекладу: ${err.message || 'Спробуйте пізніше'}`, 3500);
-      if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+      if (translateBtnLabel) translateBtnLabel.textContent = 'Переклад';
       if (btnTranslateText) btnTranslateText.classList.remove('loading');
     }
   }
