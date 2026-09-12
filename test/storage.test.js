@@ -15,6 +15,7 @@ describe('Storage and Configuration Tests', () => {
     assert.strictEqual(typeof DEFAULT_CONFIG.vadThreshold, 'number');
     assert.strictEqual(typeof DEFAULT_CONFIG.silenceTimeoutMs, 'number');
     assert.strictEqual(DEFAULT_CONFIG.spokenLanguage, 'uk');
+    assert.strictEqual(typeof DEFAULT_CONFIG.directPaste, 'boolean');
   });
 
   it('ConfigManager.load should return default config when no storage exists', () => {

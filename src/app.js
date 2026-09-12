@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const recordBtnLabel = document.getElementById('recordBtnLabel');
   const badgeAutoCopy = document.getElementById('badgeAutoCopy');
   const autoCopyCheck = document.getElementById('autoCopyCheck');
+  const badgeDirectPaste = document.getElementById('badgeDirectPaste');
+  const directPasteCheck = document.getElementById('directPasteCheck');
   const btnTranslateText = document.getElementById('btnTranslateText');
   const translateBtnLabel = document.getElementById('translateBtnLabel');
   const translateIconWrap = document.getElementById('translateIconWrap');
@@ -49,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectRecordingBehavior = document.getElementById('selectRecordingBehavior');
   const selectFontSize = document.getElementById('selectFontSize');
   const checkAutoCopy = document.getElementById('checkAutoCopy');
+  const checkDirectPaste = document.getElementById('checkDirectPaste');
   const checkAlwaysOnTop = document.getElementById('checkAlwaysOnTop');
   const rangeSilenceTimeout = document.getElementById('rangeSilenceTimeout');
   const valSilenceTimeout = document.getElementById('valSilenceTimeout');
@@ -128,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     selectRecordingBehavior.value = config.recordingBehavior || 'toggle';
     if (selectFontSize) selectFontSize.value = config.fontSize || 'medium';
     checkAutoCopy.checked = Boolean(config.autoCopy);
+    if (checkDirectPaste) checkDirectPaste.checked = Boolean(config.directPaste);
     checkAlwaysOnTop.checked = Boolean(config.alwaysOnTop);
 
     rangeSilenceTimeout.value = config.silenceTimeoutMs || 1800;
@@ -153,8 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (quickTargetLangSelect) quickTargetLangSelect.value = config.targetLanguage || 'English';
     if (sectionTargetLang) sectionTargetLang.style.display = 'flex';
 
-    // Auto-copy badge in main screen
+    // Auto-copy and Direct Paste badges in main screen
     updateAutoCopyBadge();
+    updateDirectPasteBadge();
 
     // Mode pills in main screen
     updateModePillsUI(config.mode);
@@ -210,6 +215,18 @@ document.addEventListener('DOMContentLoaded', () => {
         autoCopyCheck.innerHTML = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
       } else {
         autoCopyCheck.innerHTML = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      }
+    }
+  }
+
+  function updateDirectPasteBadge() {
+    if (!badgeDirectPaste) return;
+    badgeDirectPaste.classList.toggle('active', Boolean(config.directPaste));
+    if (directPasteCheck) {
+      if (config.directPaste) {
+        directPasteCheck.innerHTML = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else {
+        directPasteCheck.innerHTML = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
       }
     }
   }
@@ -477,6 +494,20 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast(config.autoCopy ? 'Автокопіювання: увімкнено' : 'Автокопіювання: вимкнено');
     });
 
+    // Direct Paste badge click
+    if (badgeDirectPaste) {
+      badgeDirectPaste.addEventListener('click', () => {
+        config.directPaste = !config.directPaste;
+        ConfigManager.save(config);
+        if (checkDirectPaste) checkDirectPaste.checked = config.directPaste;
+        if (window.electronAPI && window.electronAPI.saveConfigBackup) {
+          window.electronAPI.saveConfigBackup(config);
+        }
+        updateDirectPasteBadge();
+        showToast(config.directPaste ? 'Автовставка в активне вікно: увімкнено' : 'Автовставка: вимкнено');
+      });
+    }
+
     // Quick Target Language Dropdown (in action bar translate group)
     if (quickTargetLangSelect) {
       quickTargetLangSelect.addEventListener('change', () => {
@@ -660,6 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
     config.recordingBehavior = selectRecordingBehavior.value;
     if (selectFontSize) config.fontSize = selectFontSize.value;
     config.autoCopy = checkAutoCopy.checked;
+    if (checkDirectPaste) config.directPaste = checkDirectPaste.checked;
     config.alwaysOnTop = checkAlwaysOnTop.checked;
     config.silenceTimeoutMs = Number(rangeSilenceTimeout.value);
     config.vadThreshold = Number(rangeVadThreshold.value) / 1000;
@@ -930,7 +962,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auto copy on complete
     if (config.autoCopy && currentFullText && currentFullText.trim()) {
-      copyTranscript(true);
+      copyTranscript(!config.directPaste);
+    }
+
+    // Direct paste to active window on complete
+    if (config.directPaste && currentFullText && currentFullText.trim()) {
+      await pasteToActiveWindow(currentFullText);
     }
   }
 
@@ -1002,6 +1039,42 @@ document.addEventListener('DOMContentLoaded', () => {
     waveBars.forEach(bar => {
       bar.style.height = '4px';
     });
+  }
+
+  /**
+   * Directly paste transcript into active external window (Discord, Telegram, Word, etc.)
+   */
+  async function pasteToActiveWindow(text) {
+    let textToPaste = (text || currentFullText || (transcriptBox && transcriptBox.innerText) || '').trim();
+    if (!textToPaste) return;
+
+    if (config.mode === 'smart_polish' && typeof cleanSmartPolish === 'function') {
+      textToPaste = cleanSmartPolish(textToPaste);
+    }
+
+    if (window.electronAPI && window.electronAPI.pasteToActiveWindow) {
+      try {
+        await window.electronAPI.pasteToActiveWindow(textToPaste);
+        showToast('Вставлено в активне вікно!', 2500);
+        setStatus('success', 'Вставлено!');
+
+        // Reset session base and box text so the next phrase starts fresh
+        sessionBaseText = '';
+        rawCheckpoint = '';
+        currentFullText = '';
+        if (transcriptBox) transcriptBox.innerText = '';
+        updatePlaceholderVisibility();
+        updateWordStats('');
+
+        setTimeout(() => {
+          if (!isRecording) {
+            setStatus('idle', 'Очікування');
+          }
+        }, 1800);
+      } catch (err) {
+        console.warn('Failed to paste to active window:', err);
+      }
+    }
   }
 
   /**

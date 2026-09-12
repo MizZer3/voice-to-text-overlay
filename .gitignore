@@ -5,6 +5,7 @@ node_modules/
 dist/
 Gemini Live.exe
 *.exe
+!assets/send-paste.exe
 *.lnk
 *.zip
 *.tar.gz

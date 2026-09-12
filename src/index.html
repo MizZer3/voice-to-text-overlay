@@ -126,6 +126,15 @@
           </span>
           <span class="toggle-label">Автокопіювання</span>
         </div>
+
+        <div class="badge-toggle" id="badgeDirectPaste" title="Автоматично вставляти надиктований текст прямо в активне вікно (Discord, Telegram тощо)">
+          <span id="directPasteCheck" class="toggle-check">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </span>
+          <span class="toggle-label">Автовставка</span>
+        </div>
       </div>
 
       <div class="action-right">
@@ -302,6 +311,18 @@
           </div>
           <label class="switch">
             <input type="checkbox" id="checkAutoCopy" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Direct Paste to Active Window -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-name">Пряма вставка в активне вікно</span>
+            <span class="setting-desc">Вставляти текст одразу в Discord, Telegram тощо</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="checkDirectPaste">
             <span class="slider"></span>
           </label>
         </div>

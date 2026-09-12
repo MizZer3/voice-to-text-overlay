@@ -16,6 +16,21 @@ async function build() {
     require('./generate-icons.js');
   }
 
+  // 1.1 Ensure native paste utility exists
+  const pasteExe = path.join(assetsDir, 'send-paste.exe');
+  const pasteCs = path.join(rootDir, 'tools', 'send-paste.cs');
+  if (!fs.existsSync(pasteExe) && fs.existsSync(pasteCs)) {
+    const cscCandidates = [
+      'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe',
+      'C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\csc.exe'
+    ];
+    const cscPath = cscCandidates.find(p => fs.existsSync(p));
+    if (cscPath) {
+      console.log('Compiling assets/send-paste.exe...');
+      execSync(`"${cscPath}" /target:winexe /out:"${pasteExe}" "${pasteCs}"`);
+    }
+  }
+
   // 2. Run electron-packager
   console.log('Packaging application with electron-packager...');
   const options = {

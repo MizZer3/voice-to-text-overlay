@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, globalShortcut, Tray, Menu, nativeImage, clipboard, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { execFile, exec } = require('child_process');
 
 let mainWindow = null;
 let tray = null;
@@ -258,6 +259,44 @@ ipcMain.handle('register-global-shortcut', (event, options) => {
 
 ipcMain.handle('copy-to-clipboard', (event, text) => {
   clipboard.writeText(text || '');
+  return true;
+});
+
+function triggerNativePaste(delayMs = 40) {
+  const candidates = [
+    path.join(__dirname, 'assets', 'send-paste.exe'),
+    path.join(process.resourcesPath || '', 'assets', 'send-paste.exe'),
+    path.join(__dirname, '..', 'assets', 'send-paste.exe')
+  ];
+  const pasteExe = candidates.find(p => fs.existsSync(p));
+
+  if (pasteExe) {
+    execFile(pasteExe, [String(delayMs)], (err) => {
+      if (err) console.warn('send-paste.exe execution error:', err);
+    });
+  } else {
+    // Fallback via PowerShell SendKeys
+    const psCmd = `powershell -NoProfile -NonInteractive -Command "$wshell = New-Object -ComObject wscript.shell; Start-Sleep -Milliseconds ${delayMs}; $wshell.SendKeys('^v')"`;
+    exec(psCmd, (err) => {
+      if (err) console.warn('PowerShell paste fallback error:', err);
+    });
+  }
+}
+
+ipcMain.handle('paste-to-active-window', async (event, text) => {
+  if (text) {
+    clipboard.writeText(text);
+  }
+
+  // If overlay window has focus, blur it so focus reverts to previous window (e.g. Discord)
+  if (mainWindow && mainWindow.isFocused()) {
+    mainWindow.blur();
+  }
+
+  // Brief delay to allow OS focus switch and clipboard buffer sync
+  await new Promise(r => setTimeout(r, 60));
+
+  triggerNativePaste(30);
   return true;
 });
 

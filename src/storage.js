@@ -11,6 +11,7 @@ const DEFAULT_CONFIG = {
   vadThreshold: 0.018,
   silenceTimeoutMs: 1800,
   autoCopy: true,
+  directPaste: false,
   alwaysOnTop: true,
   globalHotkey: 'Alt+Space',
   recordHotkey: 'CommandOrControl+Shift+R',

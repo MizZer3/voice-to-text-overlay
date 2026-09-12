@@ -21,8 +21,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('tray-action', (event, action) => callback(action));
   },
 
-  // Clipboard
+  // Clipboard & Direct Input
   copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text),
+  pasteToActiveWindow: (text) => ipcRenderer.invoke('paste-to-active-window', text),
   readClipboard: () => ipcRenderer.invoke('read-clipboard'),
 
   // Config sync

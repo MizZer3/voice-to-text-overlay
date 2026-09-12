@@ -683,6 +683,16 @@ kbd {
   color: var(--accent-green);
 }
 
+#badgeDirectPaste.active {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #93C5FD;
+}
+
+#badgeDirectPaste.active .toggle-check {
+  color: #93C5FD;
+}
+
 /* Secondary Action Buttons (Copy & Clear) */
 .btn-secondary {
   display: inline-flex;
