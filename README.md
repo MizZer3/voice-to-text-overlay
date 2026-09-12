@@ -58,6 +58,11 @@ The application combines low-latency streaming and high-speed translation models
   - **`Ctrl + Shift + R`**: Toggle audio recording on/off in the background without needing to click the widget.
   - Both shortcuts can be customized in Settings.
 
+* **⚡ Direct Typing / Auto-Paste into External Apps**:
+  - Automatically types or pastes dictated and polished text directly into active windows (Discord, Telegram, Slack, Word, browsers, code editors) via native Win32 `keybd_event` (<kbd>Ctrl+V</kbd>).
+  - Dictate seamlessly without ever switching windows or pressing manual copy/paste buttons.
+  - Quick toggle button **`[✓ Вставка]`** right on the action bar and in Settings.
+
 * **📋 Seamless Auto-Copy & Non-Destructive Manual Edits**:
   - **Auto-Copy to Clipboard**: Copies finished text to your clipboard automatically upon stopping recording or when a silence timeout occurs.
   - **Non-Destructive Manual Editing**: Freely type, edit typos, or insert punctuation inside the transcription box during or between recording sessions. Newly spoken words seamlessly append without resurrecting or duplicating previously spoken phrases.
@@ -97,7 +102,7 @@ npm start
 ```
 
 #### Run Automated Test Suite
-The project contains 79 comprehensive automated unit and integration tests:
+The project contains 82 comprehensive automated unit and integration tests:
 ```bash
 npm test
 ```
