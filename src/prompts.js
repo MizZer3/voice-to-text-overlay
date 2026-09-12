@@ -75,6 +75,38 @@ const SUPPORTED_LANGUAGES = [
   { code: 'zh', name: 'Chinese (Китайська)' }
 ];
 
+const SUPPORTED_SPOKEN_LANGUAGES = [
+  { code: 'uk', name: 'Українська (Ukrainian)', flag: '🇺🇦' },
+  { code: 'en', name: 'English (Англійська)', flag: '🇬🇧' },
+  { code: 'pl', name: 'Polski (Польська)', flag: '🇵🇱' },
+  { code: 'de', name: 'Deutsch (Німецька)', flag: '🇩🇪' },
+  { code: 'es', name: 'Español (Іспанська)', flag: '🇪🇸' },
+  { code: 'auto', name: 'Автовизначення (Auto-detect)', flag: '🌐' }
+];
+
+const SPOKEN_LANG_DIRECTIVES = {
+  uk: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
+- The user is speaking UKRAINIAN (Українська мова).
+- You MUST transcribe and process all spoken audio strictly in Ukrainian.
+- Even if initial words, short syllables, or ambiguous sounds phonetically resemble Russian or other Slavic languages (e.g. "привіт", "так", "добре", "ну", "слухай", "дивіться"), ALWAYS prioritize, interpret, and output Ukrainian words using proper Ukrainian orthography (і, ї, є, ґ).
+- NEVER switch to Russian, Polish, or any other language. Ukrainian only.`,
+  en: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
+- The user is speaking ENGLISH.
+- Transcribe and process all spoken audio strictly in English using standard English spelling.`,
+  pl: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
+- The user is speaking POLISH (Język polski).
+- Transcribe and process all spoken audio strictly in Polish with proper Polish diacritics (ą, ć, ę, ł, ń, ó, ś, ź, ż).`,
+  de: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
+- The user is speaking GERMAN (Deutsch).
+- Transcribe and process all spoken audio strictly in German with proper umlauts and capitalization.`,
+  es: `PRIMARY SPOKEN LANGUAGE DIRECTIVE:
+- The user is speaking SPANISH (Español).
+- Transcribe and process all spoken audio strictly in Spanish.`,
+  auto: `SPOKEN LANGUAGE DIRECTIVE:
+- Detect the spoken language automatically.
+- Output text in the exact language spoken by the user without translating.`
+};
+
 /**
  * Get system prompt for a given mode and options
  * @param {string} modeId
@@ -89,6 +121,16 @@ function getSystemPrompt(modeId, options = {}) {
   } else {
     prompt = mode.systemPrompt;
   }
+
+  // Inject spoken language directive for transcription modes to prevent wrong-language hallucination
+  if (modeId === 'smart_polish' || modeId === 'verbatim') {
+    const lang = options.spokenLanguage || 'uk';
+    const directive = SPOKEN_LANG_DIRECTIVES[lang] || SPOKEN_LANG_DIRECTIVES.uk;
+    if (directive) {
+      prompt += `\n\n${directive}`;
+    }
+  }
+
   if (options.customInstructions && options.customInstructions.trim()) {
     prompt += `\n\nUser Custom Instructions:\n${options.customInstructions.trim()}`;
   }
@@ -104,6 +146,8 @@ if (typeof module !== 'undefined' && module.exports) {
     MODES,
     DEFAULT_MODELS,
     SUPPORTED_LANGUAGES,
+    SUPPORTED_SPOKEN_LANGUAGES,
+    SPOKEN_LANG_DIRECTIVES,
     getSystemPrompt,
     cleanSmartPolish
   };

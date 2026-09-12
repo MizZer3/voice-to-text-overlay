@@ -542,8 +542,6 @@ kbd {
   flex-shrink: 0;
   letter-spacing: 0.1px;
   gap: 8px;
-}
-
 #activeModeLabel {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -724,6 +722,86 @@ kbd {
   background: var(--accent-green-bg);
   border-color: var(--accent-green);
   color: var(--accent-green);
+}
+
+/* Translate Button Group (unified button + language selector pill) */
+.translate-btn-group {
+  display: inline-flex;
+  align-items: center;
+  height: 25px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.translate-btn-group:hover {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.translate-btn-group .btn-action-translate {
+  border: none;
+  background: transparent;
+  padding: 0 5px 0 8px;
+  border-radius: 5px 0 0 5px;
+}
+
+.select-translate-target {
+  height: 100%;
+  padding: 0 4px 0 2px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid rgba(59, 130, 246, 0.25);
+  color: #93C5FD;
+  font-size: 9.5px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  border-radius: 0 5px 5px 0;
+  transition: all 0.15s ease;
+}
+
+.select-translate-target:hover {
+  color: #FFFFFF;
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.select-translate-target option {
+  background: #18181B;
+  color: #FAFAFA;
+}
+
+.btn-action-translate {
+  color: #93C5FD;
+  border-color: rgba(59, 130, 246, 0.28);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.btn-action-translate:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #BFDBFE;
+}
+
+.btn-action-translate.active-translated {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #6EE7B7;
+}
+
+.btn-action-translate.loading {
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.btn-action-translate.loading svg {
+  animation: translateSpin 0.9s linear infinite;
+}
+
+@keyframes translateSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Primary Button (e.g. Save Settings) */

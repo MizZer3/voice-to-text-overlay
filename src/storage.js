@@ -18,6 +18,7 @@ const DEFAULT_CONFIG = {
   compactMode: false,
   deviceId: '',
   fontSize: 'medium', // 'small' | 'medium' | 'large'
+  spokenLanguage: 'uk', // 'uk' | 'en' | 'pl' | 'de' | 'es' | 'auto'
   customInstructions: '',
   configVersion: 2
 };
@@ -42,9 +43,13 @@ class ConfigManager {
       }
     }
     const merged = { ...DEFAULT_CONFIG, ...loaded };
-    const allowedModes = ['smart_polish', 'verbatim', 'live_translate'];
+    const allowedModes = ['smart_polish', 'verbatim'];
     if (!allowedModes.includes(merged.mode)) {
       merged.mode = 'smart_polish';
+    }
+    const allowedSpokenLangs = ['uk', 'en', 'pl', 'de', 'es', 'auto'];
+    if (!allowedSpokenLangs.includes(merged.spokenLanguage)) {
+      merged.spokenLanguage = 'uk';
     }
     // Migrate legacy default config, non-existent gemini-3.5-live-translate (missing -preview), and deprecated 2.x models
     const DEPRECATED_MODELS = [

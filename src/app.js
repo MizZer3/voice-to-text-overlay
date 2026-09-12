@@ -13,9 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnMinimize = document.getElementById('btnMinimize');
   const btnClose = document.getElementById('btnClose');
   const modeBar = document.getElementById('modeBar');
-  const translateBar = document.getElementById('translateBar');
-  const quickSelectTargetLang = document.getElementById('quickSelectTargetLang');
-  const modeLangBadge = document.getElementById('modeLangBadge');
   const waveformContainer = document.getElementById('waveformContainer');
   const waveBars = document.querySelectorAll('.wave-bar');
   const transcriptBox = document.getElementById('transcriptBox');
@@ -26,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const recordBtnLabel = document.getElementById('recordBtnLabel');
   const badgeAutoCopy = document.getElementById('badgeAutoCopy');
   const autoCopyCheck = document.getElementById('autoCopyCheck');
+  const btnTranslateText = document.getElementById('btnTranslateText');
+  const translateBtnLabel = document.getElementById('translateBtnLabel');
+  const translateIconWrap = document.getElementById('translateIconWrap');
+  const quickTargetLangSelect = document.getElementById('quickTargetLangSelect');
   const btnCopy = document.getElementById('btnCopy');
   const copyIconWrap = document.getElementById('copyIconWrap');
   const copyBtnLabel = document.getElementById('copyBtnLabel');
@@ -39,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputApiKey = document.getElementById('inputApiKey');
   const btnToggleKeyVisibility = document.getElementById('btnToggleKeyVisibility');
   const selectMode = document.getElementById('selectMode');
+  const selectSpokenLanguage = document.getElementById('selectSpokenLanguage');
   const sectionTargetLang = document.getElementById('sectionTargetLang');
   const selectTargetLang = document.getElementById('selectTargetLang');
   const selectModel = document.getElementById('selectModel');
@@ -70,14 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentFullText = '';
   let sessionBaseText = '';
   let rawCheckpoint = '';
+  let originalTextBeforeTranslate = null;
+  let isShowingTranslation = false;
   let toastTimer = null;
   let cursorEl = null;
-  let pendingTranslations = 0;
   let currentClearEpoch = 0;
   let lastCommittedUtterances = [];
-  let translateDebounceTimer = null;
-  let lastTranslatedSource = '';
-  let lastTranslateRequestTime = 0;
 
   // Initialize UI with saved config
   populateModelOptions();
@@ -148,8 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
     transcriptBox.classList.remove('font-small', 'font-medium', 'font-large');
     transcriptBox.classList.add(`font-${config.fontSize || 'medium'}`);
 
-    // Target language visibility
-    sectionTargetLang.style.display = config.mode === 'live_translate' ? 'flex' : 'none';
+    // Spoken and target language in UI
+    if (selectSpokenLanguage) selectSpokenLanguage.value = config.spokenLanguage || 'uk';
+    if (quickTargetLangSelect) quickTargetLangSelect.value = config.targetLanguage || 'English';
+    if (sectionTargetLang) sectionTargetLang.style.display = 'flex';
 
     // Auto-copy badge in main screen
     updateAutoCopyBadge();
@@ -157,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mode pills in main screen
     updateModePillsUI(config.mode);
 
-    // Update quick translate bar & badges
+    // Update quick translate target select
     updateTranslateBarUI();
 
     // Initial placeholder state
@@ -171,38 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btnPin.classList.toggle('active', config.alwaysOnTop);
   }
 
-  function getLangCode(langName) {
-    const map = {
-      'English': 'EN',
-      'Ukrainian': 'UK',
-      'Polish': 'PL',
-      'German': 'DE',
-      'Spanish': 'ES',
-      'French': 'FR',
-      'Italian': 'IT',
-      'Portuguese': 'PT',
-      'Japanese': 'JA',
-      'Chinese': 'ZH'
-    };
-    return map[langName] || (langName ? langName.slice(0, 2).toUpperCase() : 'EN');
-  }
-
   function updateTranslateBarUI() {
-    const isTranslate = config.mode === 'live_translate';
-    if (translateBar) {
-      if (isTranslate) {
-        translateBar.classList.add('active');
-        translateBar.style.display = 'flex';
-      } else {
-        translateBar.classList.remove('active');
-        translateBar.style.display = 'none';
-      }
-    }
-    if (modeLangBadge) {
-      modeLangBadge.textContent = getLangCode(config.targetLanguage || 'English');
-    }
-    if (quickSelectTargetLang && config.targetLanguage) {
-      quickSelectTargetLang.value = config.targetLanguage;
+    if (quickTargetLangSelect && config.targetLanguage) {
+      quickTargetLangSelect.value = config.targetLanguage;
     }
     if (selectTargetLang && config.targetLanguage) {
       selectTargetLang.value = config.targetLanguage;
@@ -250,13 +223,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTranslateBarUI();
 
     const modeObj = MODES[activeMode] || MODES.smart_polish;
-    let label = `${modeObj.name}`;
-    if (activeMode === 'live_translate') {
-      label += ` ➔ ${config.targetLanguage}`;
-    }
     const modelDisplay = config.model || 'gemini-3.5-transcribe-live';
-    label += ` · ${modelDisplay}`;
-    activeModeLabel.textContent = label;
+    activeModeLabel.textContent = `${modeObj.name} · ${modelDisplay}`;
   }
 
   /**
@@ -390,17 +358,17 @@ document.addEventListener('DOMContentLoaded', () => {
     transcriptBox.addEventListener('input', () => {
       const text = transcriptBox.innerText || '';
       currentFullText = text;
+      if (isShowingTranslation) {
+        isShowingTranslation = false;
+        originalTextBeforeTranslate = null;
+        if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+        if (btnTranslateText) btnTranslateText.classList.remove('active-translated', 'loading');
+      }
       if (!text.trim()) {
         sessionBaseText = '';
         rawCheckpoint = '';
         currentClearEpoch++;
-        pendingTranslations = 0;
         lastCommittedUtterances = [];
-        if (translateDebounceTimer) {
-          clearTimeout(translateDebounceTimer);
-          translateDebounceTimer = null;
-        }
-        lastTranslatedSource = '';
         if (liveClient) {
           liveClient.clearTranscript();
           if (isRecording) {
@@ -410,7 +378,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         sessionBaseText = text.trim();
         rawCheckpoint = (liveClient && isRecording) ? (liveClient.getFullText() || '').trim() : '';
-        lastTranslatedSource = '';
       }
       updatePlaceholderVisibility();
       updateWordStats(currentFullText);
@@ -426,29 +393,26 @@ document.addEventListener('DOMContentLoaded', () => {
       updatePlaceholderVisibility();
     });
 
-    // Quick Target Language Selector
-    if (quickSelectTargetLang) {
-      quickSelectTargetLang.addEventListener('change', () => {
-        config.targetLanguage = quickSelectTargetLang.value;
-        ConfigManager.save(config);
-        if (window.electronAPI && window.electronAPI.saveConfigBackup) {
-          window.electronAPI.saveConfigBackup(config);
-        }
-        updateTranslateBarUI();
-        updateModePillsUI(config.mode);
-        showToast(`Мова перекладу: ${config.targetLanguage}`, 1500);
-      });
-    }
-
     if (selectTargetLang) {
       selectTargetLang.addEventListener('change', () => {
         config.targetLanguage = selectTargetLang.value;
+        if (quickTargetLangSelect) quickTargetLangSelect.value = config.targetLanguage;
         ConfigManager.save(config);
         if (window.electronAPI && window.electronAPI.saveConfigBackup) {
           window.electronAPI.saveConfigBackup(config);
         }
         updateTranslateBarUI();
-        updateModePillsUI(config.mode);
+      });
+    }
+
+    if (selectSpokenLanguage) {
+      selectSpokenLanguage.addEventListener('change', () => {
+        config.spokenLanguage = selectSpokenLanguage.value;
+        ConfigManager.save(config);
+        if (window.electronAPI && window.electronAPI.saveConfigBackup) {
+          window.electronAPI.saveConfigBackup(config);
+        }
+        showToast(`Пріоритет мови: ${config.spokenLanguage.toUpperCase()}`, 1500);
       });
     }
 
@@ -457,12 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const pill = e.target.closest('.mode-pill');
       if (!pill) return;
       const newMode = pill.getAttribute('data-mode');
-      if (newMode === 'live_translate' && config.mode === 'live_translate') {
-        if (quickSelectTargetLang) {
-          quickSelectTargetLang.focus();
-        }
-        return;
-      }
       switchMode(newMode);
     });
 
@@ -518,6 +476,27 @@ document.addEventListener('DOMContentLoaded', () => {
       updateAutoCopyBadge();
       showToast(config.autoCopy ? 'Автокопіювання: увімкнено' : 'Автокопіювання: вимкнено');
     });
+
+    // Quick Target Language Dropdown (in action bar translate group)
+    if (quickTargetLangSelect) {
+      quickTargetLangSelect.addEventListener('change', () => {
+        config.targetLanguage = quickTargetLangSelect.value;
+        if (selectTargetLang) selectTargetLang.value = config.targetLanguage;
+        ConfigManager.save(config);
+        if (window.electronAPI && window.electronAPI.saveConfigBackup) {
+          window.electronAPI.saveConfigBackup(config);
+        }
+        updateTranslateBarUI();
+        showToast(`Мова перекладу: ${config.targetLanguage}`, 1500);
+      });
+    }
+
+    // Translate button (on-demand fast translation)
+    if (btnTranslateText) {
+      btnTranslateText.addEventListener('click', () => {
+        handleOnDemandTranslate();
+      });
+    }
 
     // Copy button
     btnCopy.addEventListener('click', () => {
@@ -636,8 +615,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear old text in the window and reset client transcript state
     clearTranscript(true);
 
-    selectMode.value = newMode;
-    sectionTargetLang.style.display = newMode === 'live_translate' ? 'flex' : 'none';
+    if (selectMode) selectMode.value = newMode;
+    if (sectionTargetLang) sectionTargetLang.style.display = 'flex';
     applyModelToUI();
     updateModePillsUI(newMode);
 
@@ -659,10 +638,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function saveSettingsFromUI() {
     const oldMode = config.mode;
     const oldTargetLang = config.targetLanguage;
+    const oldSpokenLang = config.spokenLanguage;
     const oldModel = config.model;
 
     config.apiKey = inputApiKey.value.trim();
     config.mode = selectMode.value;
+    if (selectSpokenLanguage) config.spokenLanguage = selectSpokenLanguage.value;
     config.targetLanguage = selectTargetLang.value;
 
     if (selectModel.value === 'custom') {
@@ -703,7 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTranscript(true);
     }
 
-    if (isRecording && (oldMode !== config.mode || oldTargetLang !== config.targetLanguage || oldModel !== config.model)) {
+    if (isRecording && (oldMode !== config.mode || oldTargetLang !== config.targetLanguage || oldSpokenLang !== config.spokenLanguage || oldModel !== config.model)) {
       await restartSession();
     }
   }
@@ -716,43 +697,6 @@ document.addEventListener('DOMContentLoaded', () => {
       await stopRecording();
     } else {
       await startRecording();
-    }
-  }
-
-  /**
-   * Run fast simultaneous translation of cumulative text in live_translate mode
-   * @param {string} sourceText
-   * @param {boolean} [force=false]
-   */
-  async function runLiveTranslate(sourceText, force = false) {
-    if (config.mode !== 'live_translate') return;
-    const cleanSource = (sourceText || '').trim();
-    if (!cleanSource) return;
-    if (!force && cleanSource === lastTranslatedSource.trim()) return;
-
-    const currentEpoch = currentClearEpoch;
-    lastTranslatedSource = cleanSource;
-    lastTranslateRequestTime = Date.now();
-    pendingTranslations++;
-
-    try {
-      const translated = await translateText(cleanSource, config.targetLanguage, config.apiKey);
-      if (currentEpoch !== currentClearEpoch) {
-        return; // Dropped if transcript was cleared in the meantime
-      }
-      const combined = sessionBaseText ? `${sessionBaseText} ${translated}` : translated;
-      currentFullText = combined;
-      renderTranscript(currentFullText);
-      updateWordStats(currentFullText);
-
-      if (config.autoCopy && isRecording) {
-        copyTranscript(false); // Silent background clipboard update
-      }
-      return translated;
-    } catch (err) {
-      console.warn('Live translation error:', err);
-    } finally {
-      pendingTranslations = Math.max(0, pendingTranslations - 1);
     }
   }
 
@@ -773,8 +717,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Capture any existing text in the transcript box so new recording is appended rather than overwritten
       sessionBaseText = (currentFullText || (transcriptBox && transcriptBox.innerText) || '').trim();
       rawCheckpoint = '';
-      lastTranslatedSource = '';
-      lastTranslateRequestTime = 0;
 
       setStatus('connecting', 'Підключення до Gemini Live...');
       btnRecord.classList.add('recording');
@@ -789,8 +731,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ensureBlinkCursor();
 
       // 1. Initialize Gemini Live WebSocket Client
+      if (isShowingTranslation) {
+        isShowingTranslation = false;
+        originalTextBeforeTranslate = null;
+        if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+        if (btnTranslateText) btnTranslateText.classList.remove('active-translated', 'loading');
+      }
+
       const systemPrompt = getSystemPrompt(config.mode, {
         targetLanguage: config.targetLanguage,
+        spokenLanguage: config.spokenLanguage || 'uk',
         customInstructions: config.customInstructions
       });
 
@@ -817,39 +767,6 @@ document.addEventListener('DOMContentLoaded', () => {
       liveClient.onDelta = (delta, currentTurn, fullText) => {
         const rawSpeech = typeof extractNewSpeech === 'function' ? extractNewSpeech(fullText, rawCheckpoint) : fullText;
 
-        if (config.mode === 'live_translate') {
-          // If we haven't received any translation yet, display source text so user sees audio is active
-          if (!lastTranslatedSource && rawSpeech) {
-            const preview = sessionBaseText ? `${sessionBaseText} ${rawSpeech}` : rawSpeech;
-            renderTranscript(preview);
-            updateWordStats(preview);
-          }
-
-          if (!rawSpeech) return;
-
-          // Throttle translation during continuous rapid speech (translate at least every 1200ms)
-          const now = Date.now();
-          if (now - lastTranslateRequestTime > 1200) {
-            if (translateDebounceTimer) clearTimeout(translateDebounceTimer);
-            translateDebounceTimer = null;
-            runLiveTranslate(rawSpeech);
-            return;
-          }
-
-          // Debounce translation during live speech (~350ms after user finishes an active phrase)
-          if (translateDebounceTimer) clearTimeout(translateDebounceTimer);
-          translateDebounceTimer = setTimeout(() => {
-            if (isRecording && config.mode === 'live_translate') {
-              const currentRaw = liveClient ? liveClient.getFullText() : fullText;
-              const currentSpeech = typeof extractNewSpeech === 'function' ? extractNewSpeech(currentRaw, rawCheckpoint) : currentRaw;
-              if (currentSpeech) {
-                runLiveTranslate(currentSpeech);
-              }
-            }
-          }, 350);
-          return;
-        }
-
         let displayText = rawSpeech;
         if (config.mode === 'smart_polish' && typeof cleanSmartPolish === 'function') {
           displayText = cleanSmartPolish(rawSpeech);
@@ -863,24 +780,14 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWordStats(combined);
       };
 
-      liveClient.onTurnComplete = async (turnText, utteranceIndex, wasTranslated) => {
+      liveClient.onTurnComplete = async (turnText, utteranceIndex) => {
         if (!turnText || !turnText.trim()) return;
 
         if (typeof utteranceIndex === 'number' && utteranceIndex >= 0) {
           lastCommittedUtterances[utteranceIndex] = turnText;
         }
 
-        if (config.mode === 'live_translate') {
-          if (translateDebounceTimer) {
-            clearTimeout(translateDebounceTimer);
-            translateDebounceTimer = null;
-          }
-          const rawFull = liveClient ? liveClient.getFullText() : turnText;
-          const textToTranslate = typeof extractNewSpeech === 'function' ? extractNewSpeech(rawFull, rawCheckpoint) : rawFull;
-          if (textToTranslate) {
-            await runLiveTranslate(textToTranslate, true);
-          }
-        } else if (config.autoCopy && isRecording) {
+        if (config.autoCopy && isRecording) {
           copyTranscript(false); // silent clipboard sync during live session without interrupting toast
         }
       };
@@ -913,20 +820,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWaveform(normalizedRms);
       };
 
-      // When user pauses speaking (silence timeout), trigger translation in live_translate or sync clipboard
+      // When user pauses speaking (silence timeout), sync clipboard if autoCopy is active
       audioRecorder.onSilenceDetected = () => {
         if (liveClient && isRecording) {
-          const currentText = liveClient.getFullText();
-          if (config.mode === 'live_translate') {
-            if (translateDebounceTimer) {
-              clearTimeout(translateDebounceTimer);
-              translateDebounceTimer = null;
-            }
-            const toTranslate = typeof extractNewSpeech === 'function' ? extractNewSpeech(currentText, rawCheckpoint) : currentText;
-            if (toTranslate) {
-              runLiveTranslate(toTranslate);
-            }
-          } else if (config.autoCopy && currentFullText && currentFullText.trim()) {
+          if (config.autoCopy && currentFullText && currentFullText.trim()) {
             copyTranscript(false);
           }
         }
@@ -970,13 +867,6 @@ document.addEventListener('DOMContentLoaded', () => {
     waveformContainer.classList.remove('active');
     resetWaveform();
     removeBlinkCursor();
-    updatePlaceholderVisibility();
-
-    if (translateDebounceTimer) {
-      clearTimeout(translateDebounceTimer);
-      translateDebounceTimer = null;
-    }
-
     if (audioRecorder) {
       audioRecorder.stop();
       audioRecorder = null;
@@ -1000,14 +890,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Finalize translation pass in live_translate mode
-    if (config.mode === 'live_translate') {
-      const finalSource = liveClient ? liveClient.getFullText() : '';
-      const textToTranslate = typeof extractNewSpeech === 'function' ? extractNewSpeech(finalSource, rawCheckpoint) : finalSource;
-      if (textToTranslate && textToTranslate.trim()) {
-        await runLiveTranslate(textToTranslate, true);
-      }
-    } else if (liveClient) {
+    if (liveClient) {
       const finalRaw = liveClient.getFullText();
       const newSpeech = typeof extractNewSpeech === 'function' ? extractNewSpeech(finalRaw, rawCheckpoint) : finalRaw;
       let cleaned = newSpeech;
@@ -1027,14 +910,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Save full accumulated text for subsequent recording sessions
     sessionBaseText = (currentFullText || (transcriptBox && transcriptBox.innerText) || '').trim();
     rawCheckpoint = '';
-
-    // Wait briefly for any in-flight translation to finish before disconnecting and auto-copying
-    if (pendingTranslations > 0) {
-      const transWaitStart = Date.now();
-      while (pendingTranslations > 0 && Date.now() - transWaitStart < 3000) {
-        await new Promise(r => setTimeout(r, 50));
-      }
-    }
 
     if (stopEpoch !== currentClearEpoch) {
       if (liveClient) {
@@ -1185,13 +1060,11 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionBaseText = '';
     rawCheckpoint = '';
     currentFullText = '';
+    originalTextBeforeTranslate = null;
+    isShowingTranslation = false;
+    if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+    if (btnTranslateText) btnTranslateText.classList.remove('active-translated', 'loading');
     lastCommittedUtterances = [];
-    pendingTranslations = 0;
-    if (translateDebounceTimer) {
-      clearTimeout(translateDebounceTimer);
-      translateDebounceTimer = null;
-    }
-    lastTranslatedSource = '';
     if (liveClient) {
       liveClient.clearTranscript();
       if (!isRecording) {
@@ -1212,6 +1085,80 @@ document.addEventListener('DOMContentLoaded', () => {
     updateWordStats('');
     if (!silent) {
       showToast('Текст очищено');
+    }
+  }
+
+  /**
+   * Fast, on-demand full transcript translation
+   * Uses Gemini REST API generateContent (gemini-3.5-flash-lite) via fast-translator.js
+   * Consumes only 1 API call per click, preserving user minute limits!
+   */
+  async function handleOnDemandTranslate() {
+    if (isShowingTranslation && originalTextBeforeTranslate) {
+      // Toggle back to original transcript
+      currentFullText = originalTextBeforeTranslate;
+      renderTranscript(currentFullText);
+      updateWordStats(currentFullText);
+      isShowingTranslation = false;
+      originalTextBeforeTranslate = null;
+      if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+      if (btnTranslateText) btnTranslateText.classList.remove('active-translated', 'loading');
+      showToast('Повернуто оригінальний текст', 2000);
+      return;
+    }
+
+    const currentText = (currentFullText || (transcriptBox && transcriptBox.innerText) || '').trim();
+    if (!currentText) {
+      showToast('Немає тексту для перекладу', 2500);
+      return;
+    }
+
+    if (!config.apiKey || !config.apiKey.trim()) {
+      openSettings();
+      inputApiKey.focus();
+      showToast('Вкажіть Gemini API ключ у налаштуваннях', 3500);
+      return;
+    }
+
+    if (btnTranslateText) {
+      btnTranslateText.classList.add('loading');
+    }
+    if (translateBtnLabel) {
+      translateBtnLabel.textContent = 'Перекладаю...';
+    }
+
+    try {
+      const targetLang = config.targetLanguage || 'English';
+      const translated = await translateText(currentText, targetLang, config.apiKey);
+      if (translated && translated !== currentText) {
+        originalTextBeforeTranslate = currentText;
+        isShowingTranslation = true;
+        currentFullText = translated;
+        renderTranscript(translated);
+        updateWordStats(translated);
+
+        if (translateBtnLabel) translateBtnLabel.textContent = 'Оригінал';
+        if (btnTranslateText) {
+          btnTranslateText.classList.remove('loading');
+          btnTranslateText.classList.add('active-translated');
+        }
+
+        if (config.autoCopy) {
+          copyTranscript(false);
+          showToast(`Перекладено на ${targetLang} та скопійовано!`, 3000);
+        } else {
+          showToast(`Перекладено на ${targetLang}! (Клікніть «Оригінал», щоб повернути)`, 3500);
+        }
+      } else {
+        showToast('Текст уже цією мовою', 2500);
+        if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+        if (btnTranslateText) btnTranslateText.classList.remove('loading');
+      }
+    } catch (err) {
+      console.error('On-demand translation error:', err);
+      showToast(`Помилка перекладу: ${err.message || 'Спробуйте пізніше'}`, 3500);
+      if (translateBtnLabel) translateBtnLabel.textContent = 'Перекласти';
+      if (btnTranslateText) btnTranslateText.classList.remove('loading');
     }
   }
 

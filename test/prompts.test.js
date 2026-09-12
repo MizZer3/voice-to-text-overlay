@@ -71,4 +71,37 @@ describe('Prompts and Modes Configuration Tests', () => {
     assert.strictEqual(modelIds.includes('gemini-2.5-flash-preview'), false);
     assert.strictEqual(modelIds.some(id => id.startsWith('gemini-2.')), false, 'No 2.x models should be present');
   });
+
+  it('getSystemPrompt should inject strong Ukrainian spoken language directive by default', () => {
+    const defaultPrompt = getSystemPrompt('smart_polish');
+    assert.ok(defaultPrompt.includes('PRIMARY SPOKEN LANGUAGE DIRECTIVE'));
+    assert.ok(defaultPrompt.includes('UKRAINIAN'));
+    assert.ok(defaultPrompt.includes('NEVER switch to Russian'));
+    assert.ok(defaultPrompt.includes('і, ї, є, ґ'));
+
+    const explicitUkPrompt = getSystemPrompt('verbatim', { spokenLanguage: 'uk' });
+    assert.ok(explicitUkPrompt.includes('PRIMARY SPOKEN LANGUAGE DIRECTIVE'));
+    assert.ok(explicitUkPrompt.includes('UKRAINIAN'));
+  });
+
+  it('getSystemPrompt should support English, Polish, German, Spanish and Auto spoken languages', () => {
+    const enPrompt = getSystemPrompt('smart_polish', { spokenLanguage: 'en' });
+    assert.ok(enPrompt.includes('ENGLISH'));
+
+    const plPrompt = getSystemPrompt('verbatim', { spokenLanguage: 'pl' });
+    assert.ok(plPrompt.includes('POLISH'));
+
+    const autoPrompt = getSystemPrompt('smart_polish', { spokenLanguage: 'auto' });
+    assert.ok(autoPrompt.includes('Detect the spoken language automatically'));
+  });
+
+  it('SUPPORTED_SPOKEN_LANGUAGES should export available spoken language options', () => {
+    const { SUPPORTED_SPOKEN_LANGUAGES } = require('../src/prompts.js');
+    assert.ok(Array.isArray(SUPPORTED_SPOKEN_LANGUAGES));
+    const codes = SUPPORTED_SPOKEN_LANGUAGES.map(l => l.code);
+    assert.ok(codes.includes('uk'));
+    assert.ok(codes.includes('en'));
+    assert.ok(codes.includes('pl'));
+    assert.ok(codes.includes('auto'));
+  });
 });

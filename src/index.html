@@ -54,7 +54,7 @@
       </div>
     </header>
 
-    <!-- Sleek Segmented Control for Modes -->
+    <!-- Sleek Segmented Control for Modes (Чистовик & Стенограма) -->
     <nav class="mode-bar" id="modeBar">
       <button class="mode-pill active" data-mode="smart_polish" title="Очищення від слів-паразитів, пунктуація">
         <svg class="mode-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -71,41 +71,7 @@
         </svg>
         <span>Стенограма</span>
       </button>
-      <button class="mode-pill" data-mode="live_translate" title="Переклад наживо на обрану мову">
-        <svg class="mode-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="2" y1="12" x2="22" y2="12"/>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-        </svg>
-        <span>Переклад</span>
-        <span class="mode-lang-badge" id="modeLangBadge">EN</span>
-      </button>
     </nav>
-
-    <!-- Quick Target Language Bar for Live Translate -->
-    <div class="translate-bar" id="translateBar" style="display: none;">
-      <div class="translate-bar-inner">
-        <span class="translate-bar-label">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
-          Мова перекладу:
-        </span>
-        <select class="translate-lang-select" id="quickSelectTargetLang" title="Оберіть цільову мову перекладу">
-          <option value="English">English (EN)</option>
-          <option value="Ukrainian">Українська (UK)</option>
-          <option value="Polish">Polski (PL)</option>
-          <option value="German">Deutsch (DE)</option>
-          <option value="Spanish">Español (ES)</option>
-          <option value="French">Français (FR)</option>
-          <option value="Italian">Italiano (IT)</option>
-          <option value="Portuguese">Português (PT)</option>
-          <option value="Japanese">日本語 (JA)</option>
-          <option value="Chinese">中文 (ZH)</option>
-        </select>
-      </div>
-    </div>
 
     <!-- Dynamic Audio Waveform Visualizer -->
     <div class="waveform-container" id="waveformContainer">
@@ -163,6 +129,26 @@
       </div>
 
       <div class="action-right">
+        <div class="translate-btn-group" id="translateBtnGroup">
+          <button class="btn-secondary btn-action-translate" id="btnTranslateText" title="Перекласти текст у чистовику (1 швидкий запит)">
+            <span class="btn-icon-wrap" id="translateIconWrap">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </span>
+            <span id="translateBtnLabel">Перекласти</span>
+          </button>
+          <select class="select-translate-target" id="quickTargetLangSelect" title="Мова перекладу">
+            <option value="English" selected>➔ EN</option>
+            <option value="Polish">➔ PL</option>
+            <option value="German">➔ DE</option>
+            <option value="Spanish">➔ ES</option>
+            <option value="French">➔ FR</option>
+            <option value="Ukrainian">➔ UK</option>
+          </select>
+        </div>
         <button class="btn-secondary btn-action-copy" id="btnCopy" title="Скопіювати весь текст у буфер обміну">
           <span class="btn-icon-wrap" id="copyIconWrap">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -230,13 +216,26 @@
           <select class="input-select" id="selectMode">
             <option value="smart_polish">Чистовик (Smart Polish) — без слів-паразитів, з пунктуацією</option>
             <option value="verbatim">Стенограма (Verbatim) — точний дослівний стенограф</option>
-            <option value="live_translate">Переклад (Live Translate) — переклад наживо на обрану мову</option>
           </select>
         </div>
 
-        <!-- Target Language (for translation mode) -->
+        <!-- Spoken Language (Priority to prevent wrong language hallucinations) -->
+        <div class="settings-section">
+          <label class="section-label">Основна мова мовлення (пріоритет)</label>
+          <select class="input-select" id="selectSpokenLanguage">
+            <option value="uk">Українська (UK) — пріоритет (запобігає помилкам на перших словах)</option>
+            <option value="en">English (EN) — пріоритет англійської</option>
+            <option value="pl">Polski (PL) — пріоритет польської</option>
+            <option value="de">Deutsch (DE) — пріоритет німецької</option>
+            <option value="es">Español (ES) — пріоритет іспанської</option>
+            <option value="auto">Автовизначення (Auto-detect) — без жорсткої фіксації</option>
+          </select>
+          <span class="section-hint">Усуває ситуації, коли перші слова розпізнаються іншою мовою.</span>
+        </div>
+
+        <!-- Target Language (for translation) -->
         <div class="settings-section" id="sectionTargetLang">
-          <label class="section-label">Мова перекладу (Live Translate)</label>
+          <label class="section-label">Цільова мова перекладу (кнопка «Перекласти»)</label>
           <select class="input-select" id="selectTargetLang">
             <option value="English">English (Англійська)</option>
             <option value="Ukrainian">Українська (Ukrainian)</option>

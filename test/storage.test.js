@@ -14,12 +14,14 @@ describe('Storage and Configuration Tests', () => {
     assert.strictEqual(DEFAULT_CONFIG.globalHotkey, 'Alt+Space');
     assert.strictEqual(typeof DEFAULT_CONFIG.vadThreshold, 'number');
     assert.strictEqual(typeof DEFAULT_CONFIG.silenceTimeoutMs, 'number');
+    assert.strictEqual(DEFAULT_CONFIG.spokenLanguage, 'uk');
   });
 
   it('ConfigManager.load should return default config when no storage exists', () => {
     const config = ConfigManager.load();
     assert.strictEqual(config.mode, 'smart_polish');
     assert.strictEqual(config.model, 'gemini-3.5-transcribe-live');
+    assert.strictEqual(config.spokenLanguage, 'uk');
     assert.strictEqual(config.configVersion, 2);
   });
 
