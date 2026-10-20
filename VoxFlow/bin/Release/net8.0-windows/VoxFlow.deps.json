@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "VoxFlow/2.0.0": {
+        "runtime": {
+          "VoxFlow.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "VoxFlow/2.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

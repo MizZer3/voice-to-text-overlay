@@ -1,0 +1,850 @@
+<Window x:Class="VoxFlow.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="VoxFlow"
+        Width="455" Height="320"
+        MinWidth="430" MinHeight="275"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Foreground="#F8FAFC"
+        TextElement.Foreground="#F8FAFC"
+        Topmost="True"
+        ResizeMode="CanResizeWithGrip">
+
+    <Window.Resources>
+        <!-- Modern Dark Button Style -->
+        <Style x:Key="ActionBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1E2230"/>
+            <Setter Property="Foreground" Value="#E2E8F0"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="7"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A3042"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#475569"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#151822"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Header Icon Button Style -->
+        <Style x:Key="HeaderIconBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="26"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#263044"/>
+                                <Setter Property="Foreground" Value="#F8FAFC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Mode Tab Button Style -->
+        <Style x:Key="ModeTabBtn" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="#F1F5F9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Dark ComboBox & ComboBoxItem Styles -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#181C28"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBd"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}"
+                                TextElement.Foreground="{TemplateBinding Foreground}">
+                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBd" Property="Background" Value="#312E81"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBd" Property="Background" Value="#252B3D"/>
+                                <Setter Property="Foreground" Value="#C7D2FE"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <ControlTemplate x:Key="DarkComboBoxTemplate" TargetType="ComboBox">
+            <Grid TextElement.Foreground="#F8FAFC">
+                <ToggleButton x:Name="ToggleButton"
+                              Focusable="False"
+                              IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                              ClickMode="Press"
+                              Background="{TemplateBinding Background}"
+                              Foreground="#F8FAFC"
+                              BorderBrush="{TemplateBinding BorderBrush}"
+                              BorderThickness="{TemplateBinding BorderThickness}"
+                              Cursor="Hand">
+                    <ToggleButton.Resources>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#F8FAFC"/>
+                        </Style>
+                    </ToggleButton.Resources>
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    TextElement.Foreground="#F8FAFC"
+                                    CornerRadius="6"
+                                    Padding="8,5">
+                                <Grid TextElement.Foreground="#F8FAFC">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                               Foreground="#F8FAFC"
+                                               FontWeight="Medium"
+                                               TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Left"/>
+                                    <TextBlock Grid.Column="1" Text="▾" Foreground="#A5B4FC" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#6366F1"/>
+                                    <Setter TargetName="Bd" Property="Background" Value="#202636"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                </ToggleButton>
+                <Popup x:Name="Popup"
+                       Placement="Bottom"
+                       IsOpen="{TemplateBinding IsDropDownOpen}"
+                       AllowsTransparency="True"
+                       Focusable="False"
+                       PopupAnimation="Slide">
+                    <Border Background="#181C28"
+                            BorderBrush="#334155"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            TextElement.Foreground="#F8FAFC"
+                            MinWidth="{TemplateBinding ActualWidth}"
+                            MaxHeight="220"
+                            Margin="0,2,0,0">
+                        <Border.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#F8FAFC"/>
+                            </Style>
+                        </Border.Resources>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
+            </Grid>
+        </ControlTemplate>
+
+        <Style x:Key="DarkComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="#181C28"/>
+            <Setter Property="Foreground" Value="#F8FAFC"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template" Value="{StaticResource DarkComboBoxTemplate}"/>
+        </Style>
+    </Window.Resources>
+
+    <Border x:Name="MainWindowBorder"
+            CornerRadius="12"
+            Background="#FA0F1219"
+            BorderBrush="#336366F1"
+            BorderThickness="1.2"
+            Margin="4">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="14" ShadowDepth="3" Opacity="0.6"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="38"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- ========================================================= -->
+            <!-- TOP TITLE BAR / DRAG HANDLE                               -->
+            <!-- ========================================================= -->
+            <Border Grid.Row="0"
+                    Background="#141824"
+                    CornerRadius="11,11,0,0"
+                    BorderBrush="#1F2937"
+                    BorderThickness="0,0,0,1"
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
+                    Padding="10,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Brand Logo + Name -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="22" Height="22" CornerRadius="6" Background="#286366F1" BorderBrush="#556366F1" BorderThickness="1" Margin="0,0,7,0">
+                            <TextBlock Text="◈" Foreground="#818CF8" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="VoxFlow" Foreground="#F8FAFC" FontWeight="Bold" FontSize="13.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                        <!-- Status Pill -->
+                        <Border x:Name="StatusBadgeBorder" Background="#1E293B" CornerRadius="9" Padding="7,2" VerticalAlignment="Center" Margin="0,0,6,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse x:Name="StatusDot" Width="6" Height="6" Fill="#10B981" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBlock x:Name="StatusText" Text="Готовий" Foreground="#CBD5E1" FontSize="10.5" FontWeight="Medium" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Spoken Language Lock Badge -->
+                        <Border x:Name="LangLockBadge"
+                                Background="#1E2436"
+                                BorderBrush="#334155"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="5,1.5"
+                                VerticalAlignment="Center"
+                                Cursor="Hand"
+                                ToolTip="Активна мова розпізнавання (натисніть для налаштувань)"
+                                MouseLeftButtonUp="LangLockBadge_Click">
+                            <TextBlock x:Name="LangLockText" Text="🇺🇦 УКР" Foreground="#A5B4FC" FontSize="10" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Window Controls -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="PinBtn" Style="{StaticResource HeaderIconBtn}" Click="PinBtn_Click" ToolTip="Поверх усіх вікон (Always on Top)" Content="📌" Foreground="#818CF8"/>
+                        <Button x:Name="SettingsBtn" Style="{StaticResource HeaderIconBtn}" Click="SettingsBtn_Click" ToolTip="Налаштування (⚙️)" Content="⚙️" Margin="2,0,0,0"/>
+                        <Button x:Name="MinimizeBtn" Style="{StaticResource HeaderIconBtn}" Click="MinimizeBtn_Click" ToolTip="Сховати в трей (Alt+Space)" Content="─" Margin="2,0,0,0"/>
+                        <Button x:Name="CloseBtn" Style="{StaticResource HeaderIconBtn}" Click="CloseBtn_Click" ToolTip="Закрити додаток" Content="✕" Margin="2,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ========================================================= -->
+            <!-- MAIN CONTENT AREA (SWITCHES BETWEEN WORKSPACE & SETTINGS) -->
+            <!-- ========================================================= -->
+            <Grid Grid.Row="1">
+
+                <!-- 1. MAIN WORKSPACE VIEW -->
+                <Grid x:Name="WorkspaceView" Visibility="Visible">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="46"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Mode Switcher + Target Window + Mini Waveform -->
+                    <Border Grid.Row="0" Background="#111520" BorderBrush="#1E293B" BorderThickness="0,0,0,1" Padding="8,3">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Mode Tabs -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="ModeSmartPolishBtn"
+                                        Style="{StaticResource ModeTabBtn}"
+                                        Click="ModeSmartPolishBtn_Click"
+                                        Background="#266366F1"
+                                        BorderBrush="#556366F1"
+                                        Foreground="#E0E7FF"
+                                        ToolTip="Чистовик: видалення слів-паразитів та корекція пунктуації"
+                                        Content="✨ Чистовик"
+                                        Margin="0,0,4,0"/>
+                                <Button x:Name="ModeVerbatimBtn"
+                                        Style="{StaticResource ModeTabBtn}"
+                                        Click="ModeVerbatimBtn_Click"
+                                        ToolTip="Дослівна стенограма без змін"
+                                        Content="📝 Стенограма"/>
+                            </StackPanel>
+
+                            <!-- Target Window Indicator for Auto-Paste -->
+                            <TextBlock x:Name="TargetAppText"
+                                       Grid.Column="1"
+                                       Text=""
+                                       Foreground="#64748B"
+                                       FontSize="10.5"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       TextTrimming="CharacterEllipsis"
+                                       Margin="8,0,8,0"
+                                       ToolTip="Вікно, куди буде автоматично вставлено текст"/>
+
+                            <!-- Mini Audio Waveform + Word Count -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <StackPanel x:Name="MiniWavePanel" Orientation="Horizontal" VerticalAlignment="Center" Height="16" Margin="0,0,8,0">
+                                    <Border x:Name="MiniBar0" Width="2.5" Height="3" CornerRadius="1" Background="#6366F1" VerticalAlignment="Center" Margin="1,0"/>
+                                    <Border x:Name="MiniBar1" Width="2.5" Height="3" CornerRadius="1" Background="#818CF8" VerticalAlignment="Center" Margin="1,0"/>
+                                    <Border x:Name="MiniBar2" Width="2.5" Height="3" CornerRadius="1" Background="#A5B4FC" VerticalAlignment="Center" Margin="1,0"/>
+                                    <Border x:Name="MiniBar3" Width="2.5" Height="3" CornerRadius="1" Background="#A5B4FC" VerticalAlignment="Center" Margin="1,0"/>
+                                    <Border x:Name="MiniBar4" Width="2.5" Height="3" CornerRadius="1" Background="#818CF8" VerticalAlignment="Center" Margin="1,0"/>
+                                    <Border x:Name="MiniBar5" Width="2.5" Height="3" CornerRadius="1" Background="#6366F1" VerticalAlignment="Center" Margin="1,0"/>
+                                </StackPanel>
+                                <TextBlock x:Name="WordCountText" Text="0 слів" Foreground="#64748B" FontSize="10.5" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Transcript TextBox + Placeholder + API Key Banner -->
+                    <Grid Grid.Row="1" Margin="8,6,8,4">
+                        <TextBox x:Name="TranscriptBox"
+                                 Background="#141824"
+                                 Foreground="#F1F5F9"
+                                 CaretBrush="#818CF8"
+                                 SelectionBrush="#4F46E5"
+                                 BorderBrush="#1E293B"
+                                 BorderThickness="1"
+                                 Padding="10,8"
+                                 FontSize="14"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 TextChanged="TranscriptBox_TextChanged"/>
+
+                        <TextBlock x:Name="PlaceholderText"
+                                   Text="Натисніть «Запис» (або Ctrl+Shift+R) і говоріть українською...&#x0a;Якщо увімкнена «Автовставка», текст автоматично вставиться у вибране поле вводу (Discord, Telegram, браузер)."
+                                   Foreground="#475569"
+                                   FontSize="12.5"
+                                   Margin="16,14,16,14"
+                                   TextWrapping="Wrap"
+                                   IsHitTestVisible="False"/>
+
+                        <!-- Missing API Key Banner -->
+                        <Border x:Name="ApiKeyBanner"
+                                Visibility="Collapsed"
+                                VerticalAlignment="Bottom"
+                                Background="#E6311B1B"
+                                BorderBrush="#EF4444"
+                                BorderThickness="1"
+                                CornerRadius="7"
+                                Padding="10,6"
+                                Margin="6">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right"
+                                        Style="{StaticResource ActionBtnStyle}"
+                                        Click="SettingsBtn_Click"
+                                        Background="#DC2626"
+                                        BorderBrush="#EF4444"
+                                        Foreground="White"
+                                        Padding="8,3"
+                                        Content="Вказати ключ"/>
+                                <TextBlock Text="⚠️ Вкажіть Gemini API Key у налаштуваннях"
+                                           Foreground="#FCA5A5"
+                                           FontSize="11.5"
+                                           VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Toast / Inline Feedback Row -->
+                    <Border x:Name="FeedbackBar"
+                            Grid.Row="2"
+                            Visibility="Collapsed"
+                            Background="#1910B981"
+                            BorderBrush="#4410B981"
+                            BorderThickness="1"
+                            CornerRadius="5"
+                            Margin="8,0,8,4"
+                            Padding="8,3">
+                        <TextBlock x:Name="FeedbackText"
+                                   Text="✓ Текст автоматично вставлено!"
+                                   Foreground="#34D399"
+                                   FontSize="11"
+                                   FontWeight="Medium"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <!-- ========================================================= -->
+                    <!-- BOTTOM ACTION BAR (ALL BUTTONS HAVE CLEAR TEXT, NO AUTOCOPY) -->
+                    <!-- ========================================================= -->
+                    <Border Grid.Row="3"
+                            Background="#141824"
+                            CornerRadius="0,0,11,11"
+                            BorderBrush="#1E293B"
+                            BorderThickness="0,1,0,0"
+                            Padding="8,5">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 1. RECORD / STOP BUTTON -->
+                            <Button x:Name="RecordBtn"
+                                    Grid.Column="0"
+                                    Style="{StaticResource ActionBtnStyle}"
+                                    Click="RecordBtn_Click"
+                                    Background="#4F46E5"
+                                    BorderBrush="#6366F1"
+                                    Foreground="#FFFFFF"
+                                    Padding="10,5"
+                                    Margin="0,0,5,0"
+                                    ToolTip="Почати / зупинити запис голосу">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse x:Name="RecordBtnDot" Width="7" Height="7" Fill="#FFFFFF" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock x:Name="RecordBtnText" Text="Запис" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 2. AUTO-PASTE TOGGLE BUTTON (Always shows "Автовставка") -->
+                            <Button x:Name="AutoPasteBtn"
+                                    Grid.Column="1"
+                                    Style="{StaticResource ActionBtnStyle}"
+                                    Click="AutoPasteBtn_Click"
+                                    Padding="8,5"
+                                    Margin="0,0,5,0"
+                                    ToolTip="Автоматично вставляти сказаний текст у вибране поле вводу (Discord, Telegram, браузер)">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Ellipse x:Name="AutoPasteDot" Width="6" Height="6" Fill="#10B981" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <TextBlock Text="Автовставка" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 3. TRANSLATE BUTTON + TARGET LANGUAGE SELECTOR -->
+                            <Border Grid.Column="2"
+                                    CornerRadius="7"
+                                    Background="#1E2230"
+                                    BorderBrush="#334155"
+                                    BorderThickness="1"
+                                    Margin="0,0,5,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="TranslateBtn"
+                                            Click="TranslateBtn_Click"
+                                            Background="Transparent"
+                                            Foreground="#E2E8F0"
+                                            BorderThickness="0"
+                                            Padding="7,5,5,5"
+                                            FontSize="11.5"
+                                            FontWeight="Medium"
+                                            Cursor="Hand"
+                                            ToolTip="Перекласти весь набраний текст обраною мовою">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🌐 " FontSize="11" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="TranslateBtnText" Text="Переклад" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Rectangle Width="1" Fill="#334155" Margin="0,4"/>
+                                    <ComboBox x:Name="QuickTargetLangCombo"
+                                              SelectionChanged="QuickTargetLangCombo_SelectionChanged"
+                                              Style="{StaticResource DarkComboBox}"
+                                              Background="Transparent"
+                                              Foreground="#A5B4FC"
+                                              BorderThickness="0"
+                                              FontSize="11"
+                                              FontWeight="Bold"
+                                              Width="52"
+                                              VerticalContentAlignment="Center"
+                                              ToolTip="Мова, на яку перекладати текст"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 4. COPY BUTTON -->
+                            <Button x:Name="CopyBtn"
+                                    Grid.Column="4"
+                                    Style="{StaticResource ActionBtnStyle}"
+                                    Click="CopyBtn_Click"
+                                    Padding="8,5"
+                                    Margin="0,0,5,0"
+                                    ToolTip="Скопіювати текст у буфер обміну">
+                                <TextBlock x:Name="CopyBtnText" Text="Копія" VerticalAlignment="Center"/>
+                            </Button>
+
+                            <!-- 5. CLEAR BUTTON -->
+                            <Button x:Name="ClearBtn"
+                                    Grid.Column="5"
+                                    Style="{StaticResource ActionBtnStyle}"
+                                    Click="ClearBtn_Click"
+                                    Padding="8,5"
+                                    Margin="0,0,8,0"
+                                    ToolTip="Очистити текстове поле">
+                                <TextBlock Text="Очистити" VerticalAlignment="Center"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- ========================================================= -->
+                <!-- 2. SPACIOUS TABBED SETTINGS VIEW                          -->
+                <!-- ========================================================= -->
+                <Grid x:Name="SettingsView" Visibility="Collapsed" Background="#10131C">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="42"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="50"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Settings Category Tabs -->
+                    <Border Grid.Row="0" Background="#151926" BorderBrush="#1E293B" BorderThickness="0,0,0,1" Padding="10,5">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="TabGeneralBtn" Grid.Column="0" Style="{StaticResource ModeTabBtn}" Click="TabGeneralBtn_Click" Content="⚙️ Загальні" Margin="0,0,4,0"/>
+                            <Button x:Name="TabHotkeysBtn" Grid.Column="1" Style="{StaticResource ModeTabBtn}" Click="TabHotkeysBtn_Click" Content="⌨️ Хоткеї та Вставка" Margin="2,0"/>
+                            <Button x:Name="TabAudioBtn" Grid.Column="2" Style="{StaticResource ModeTabBtn}" Click="TabAudioBtn_Click" Content="🎙️ Аудіо та ШІ" Margin="4,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Settings Tab Panels -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="14,10">
+                        <Grid>
+                            <!-- TAB 1: GENERAL -->
+                            <StackPanel x:Name="SettingsTabGeneral" Visibility="Visible">
+                                <TextBlock Text="🔑 Google AI Studio API Key" Foreground="#E2E8F0" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <PasswordBox x:Name="ApiKeyPasswordBox"
+                                                 Grid.Column="0"
+                                                 Background="#181C28"
+                                                 Foreground="#F8FAFC"
+                                                 BorderBrush="#334155"
+                                                 BorderThickness="1"
+                                                 Padding="8,6"
+                                                 FontSize="12.5"
+                                                 PasswordChanged="ApiKeyPasswordBox_PasswordChanged"/>
+                                    <TextBox x:Name="ApiKeyVisibleBox"
+                                             Grid.Column="0"
+                                             Visibility="Collapsed"
+                                             Background="#181C28"
+                                             Foreground="#F8FAFC"
+                                             BorderBrush="#334155"
+                                             BorderThickness="1"
+                                             Padding="8,6"
+                                             FontSize="12.5"
+                                             TextChanged="ApiKeyVisibleBox_TextChanged"/>
+                                    <Button x:Name="ToggleApiKeyVisibilityBtn"
+                                            Grid.Column="1"
+                                            Style="{StaticResource ActionBtnStyle}"
+                                            Click="ToggleApiKeyVisibilityBtn_Click"
+                                            Content="👁️"
+                                            Margin="6,0,0,0"
+                                            Padding="9,6"
+                                            ToolTip="Показати / приховати ключ"/>
+                                </Grid>
+
+                                <TextBlock Text="🗣️ Мова мовлення (Захист від хибних мов)" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="SpokenLanguageCombo" Style="{StaticResource DarkComboBox}" Margin="0,0,0,4"/>
+                                <TextBlock Text="Жорстко блокує розпізнавання польської чи російської мови, коли ви говорите українською." Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="🤖 Модель Gemini Live" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="ModelCombo" Style="{StaticResource DarkComboBox}" Margin="0,0,0,12"/>
+
+                                <Border Background="#161B28" BorderBrush="#263044" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,12">
+                                    <CheckBox x:Name="ShowWhisperHudCheck" Foreground="#F8FAFC" FontSize="12" VerticalContentAlignment="Center">
+                                        <StackPanel>
+                                            <TextBlock Text="Плаваюча капсула запису (як у Whisper)" FontWeight="SemiBold" Foreground="#F8FAFC"/>
+                                            <TextBlock Text="Показує анімовану звукову хвилю та живий текст внизу екрана під час запису" Foreground="#94A3B8" FontSize="10.5" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </Border>
+
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="130"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                        <DockPanel Margin="0,0,0,4">
+                                            <TextBlock x:Name="OpacityValText" DockPanel.Dock="Right" Text="98%" Foreground="#A5B4FC" FontSize="11.5" FontWeight="Bold"/>
+                                            <TextBlock Text="Прозорість вікна" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12"/>
+                                        </DockPanel>
+                                        <Slider x:Name="OpacitySlider" Minimum="50" Maximum="100" Value="98" ValueChanged="OpacitySlider_ValueChanged"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Розмір тексту" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="FontSizeCombo" Style="{StaticResource DarkComboBox}">
+                                            <ComboBoxItem Tag="small" Foreground="#F8FAFC" Content="Малий (12px)"/>
+                                            <ComboBoxItem Tag="medium" Foreground="#F8FAFC" Content="Середній (14px)"/>
+                                            <ComboBoxItem Tag="large" Foreground="#F8FAFC" Content="Великий (16px)"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+
+                            <!-- TAB 2: HOTKEYS & AUTO-PASTE -->
+                            <StackPanel x:Name="SettingsTabHotkeys" Visibility="Collapsed">
+                                <TextBlock Text="🎙️ Глобальний хоткей Запису (Старт / Стоп)" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="CaptureRecordHotkeyBtn"
+                                            Grid.Column="0"
+                                            Style="{StaticResource ActionBtnStyle}"
+                                            Click="CaptureRecordHotkeyBtn_Click"
+                                            PreviewKeyDown="CaptureRecordHotkeyBtn_KeyDown"
+                                            PreviewKeyUp="CaptureRecordHotkeyBtn_KeyUp"
+                                            LostFocus="CaptureHotkeyBtn_LostFocus"
+                                            Padding="10,7"
+                                            Content="Ctrl+Shift+R"/>
+                                    <Button Grid.Column="1"
+                                            Style="{StaticResource ActionBtnStyle}"
+                                            Click="ResetRecordHotkeyBtn_Click"
+                                            Content="↺ Скинути"
+                                            Margin="6,0,0,0"
+                                            Padding="9,7"/>
+                                </Grid>
+
+                                <!-- Quick Hotkey Presets (Whisper style Ctrl+Alt, etc.) -->
+                                <WrapPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="Швидкий вибір:" Foreground="#94A3B8" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,4"/>
+                                    <Button Style="{StaticResource ActionBtnStyle}" Click="PresetRecordHotkey_Click" Tag="Ctrl+Alt" Content="⚡ Ctrl+Alt (Whisper)" Padding="7,3" FontSize="11" Margin="0,0,5,4"/>
+                                    <Button Style="{StaticResource ActionBtnStyle}" Click="PresetRecordHotkey_Click" Tag="Ctrl+Win" Content="Ctrl+Win" Padding="7,3" FontSize="11" Margin="0,0,5,4"/>
+                                    <Button Style="{StaticResource ActionBtnStyle}" Click="PresetRecordHotkey_Click" Tag="RightAlt" Content="RightAlt" Padding="7,3" FontSize="11" Margin="0,0,5,4"/>
+                                    <Button Style="{StaticResource ActionBtnStyle}" Click="PresetRecordHotkey_Click" Tag="F8" Content="F8" Padding="7,3" FontSize="11" Margin="0,0,5,4"/>
+                                    <Button Style="{StaticResource ActionBtnStyle}" Click="PresetRecordHotkey_Click" Tag="Ctrl+Shift+R" Content="Ctrl+Shift+R" Padding="7,3" FontSize="11" Margin="0,0,0,4"/>
+                                </WrapPanel>
+                                <TextBlock Text="Підтримуються комбінації модифікаторів (Ctrl+Alt, Ctrl+Win), одиночні клавіші (RightAlt, F1–F12, Pause, `) та будь-які сполучення на будь-якій розкладці (УКР / ENG)." Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="🪟 Хоткей показу / приховування вікна VoxFlow" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="CaptureGlobalHotkeyBtn"
+                                            Grid.Column="0"
+                                            Style="{StaticResource ActionBtnStyle}"
+                                            Click="CaptureGlobalHotkeyBtn_Click"
+                                            PreviewKeyDown="CaptureGlobalHotkeyBtn_KeyDown"
+                                            PreviewKeyUp="CaptureGlobalHotkeyBtn_KeyUp"
+                                            LostFocus="CaptureHotkeyBtn_LostFocus"
+                                            Padding="10,7"
+                                            Content="Alt+Space"/>
+                                    <Button Grid.Column="1"
+                                            Style="{StaticResource ActionBtnStyle}"
+                                            Click="ResetGlobalHotkeyBtn_Click"
+                                            Content="↺ Скинути"
+                                            Margin="6,0,0,0"
+                                            Padding="9,7"/>
+                                </Grid>
+
+                                <TextBlock Text="⚡ Режим роботи клавіші запису" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="RecordingBehaviorCombo" Style="{StaticResource DarkComboBox}" Margin="0,0,0,12">
+                                    <ComboBoxItem Tag="toggle" Foreground="#F8FAFC" Content="Натиснути раз — Старт, ще раз — Стоп (Toggle)"/>
+                                    <ComboBoxItem Tag="push_to_talk" Foreground="#F8FAFC" Content="Затиснути і тримати під час мовлення (Push-to-Talk)"/>
+                                </ComboBox>
+
+                                <TextBlock Text="📋 Поведінка Автовставки та Буфера обміну" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,6"/>
+                                <Border Background="#161B28" BorderBrush="#263044" BorderThickness="1" CornerRadius="8" Padding="10,8">
+                                    <StackPanel>
+                                        <CheckBox x:Name="DirectPasteCheck" Foreground="#F8FAFC" FontSize="12" Margin="0,0,0,8">
+                                            <TextBlock Text="Автовставка тексту в активне вікно (Discord, Telegram, браузер)" Foreground="#F8FAFC" TextWrapping="Wrap"/>
+                                        </CheckBox>
+                                        <CheckBox x:Name="PasteOnPauseCheck" Foreground="#F8FAFC" FontSize="12" Margin="0,0,0,8">
+                                            <TextBlock Text="Вставляти також під час пауз мовлення (по фразах наживо)" Foreground="#F8FAFC" TextWrapping="Wrap"/>
+                                        </CheckBox>
+                                        <CheckBox x:Name="AutoCopyCheck" Foreground="#F8FAFC" FontSize="12">
+                                            <TextBlock Text="Автоматично копіювати текст у буфер обміну після запису" Foreground="#F8FAFC" TextWrapping="Wrap"/>
+                                        </CheckBox>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- TAB 3: AUDIO & AI -->
+                            <StackPanel x:Name="SettingsTabAudio" Visibility="Collapsed">
+                                <TextBlock Text="🎙️ Пристрій вводу (Мікрофон)" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="MicDeviceCombo" Grid.Column="0" Style="{StaticResource DarkComboBox}"/>
+                                    <Button Grid.Column="1" Style="{StaticResource ActionBtnStyle}" Click="RefreshMicsBtn_Click" Content="🔄" Margin="6,0,0,0" Padding="9,6" ToolTip="Оновити список мікрофонів"/>
+                                </Grid>
+
+                                <Border Background="#161B28" BorderBrush="#263044" BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,12">
+                                    <CheckBox x:Name="VoiceBoostCheck" Foreground="#F8FAFC" FontSize="12">
+                                        <StackPanel>
+                                            <TextBlock Text="Покращення українського мовлення (Voice Boost + High-Pass 85Hz)" FontWeight="SemiBold" Foreground="#F8FAFC"/>
+                                            <TextBlock Text="Очищує низькочастотний гул мікрофона та нормалізує тихі закінчення українських слів" Foreground="#94A3B8" FontSize="10.5" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </CheckBox>
+                                </Border>
+
+                                <DockPanel Margin="0,0,0,4">
+                                    <TextBlock x:Name="MicGainValText" DockPanel.Dock="Right" Text="320%" Foreground="#A5B4FC" FontSize="11.5" FontWeight="Bold"/>
+                                    <TextBlock Text="🔊 Підсилення мікрофона (Чутливість голосу)" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12"/>
+                                </DockPanel>
+                                <Slider x:Name="MicGainSlider" Minimum="100" Maximum="600" Value="320" TickFrequency="20" IsSnapToTickEnabled="True" ValueChanged="MicGainSlider_ValueChanged" Margin="0,0,0,4"/>
+                                <TextBlock Text="Чим більший відсоток — тим краще додаток чує вас здалеку або при тихому голосі (рекомендовано 300%–450%)." Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                                <!-- Live Mic Test Meter -->
+                                <Border Background="#161B28" BorderBrush="#263044" BorderThickness="1" CornerRadius="8" Padding="10,7" Margin="0,0,0,12">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="42"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="TestMicBtn"
+                                                Grid.Column="0"
+                                                Style="{StaticResource ActionBtnStyle}"
+                                                Click="TestMicBtn_Click"
+                                                Content="🎤 Перевірити"
+                                                Padding="8,4"
+                                                Margin="0,0,10,0"/>
+                                        <ProgressBar x:Name="MicTestBar"
+                                                     Grid.Column="1"
+                                                     Minimum="0" Maximum="100" Value="0"
+                                                     Height="10"
+                                                     Background="#0F1219"
+                                                     Foreground="#10B981"
+                                                     BorderBrush="#334155"
+                                                     BorderThickness="1"
+                                                     VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="MicTestLevelText"
+                                                   Grid.Column="2"
+                                                   Text="0%"
+                                                   Foreground="#A5B4FC"
+                                                   FontSize="11"
+                                                   FontWeight="Bold"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
+                                <DockPanel Margin="0,0,0,4">
+                                    <TextBlock x:Name="SilenceTimeoutValText" DockPanel.Dock="Right" Text="1.6 с" Foreground="#A5B4FC" FontSize="11.5" FontWeight="Bold"/>
+                                    <TextBlock Text="Тайм-аут паузи для завершення фрази" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12"/>
+                                </DockPanel>
+                                <Slider x:Name="SilenceTimeoutSlider" Minimum="700" Maximum="4000" Value="1600" TickFrequency="100" IsSnapToTickEnabled="True" ValueChanged="SilenceTimeoutSlider_ValueChanged" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="📝 Додаткові інструкції для ШІ (опціонально)" Foreground="#F8FAFC" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBox x:Name="CustomInstructionsBox"
+                                         Background="#181C28"
+                                         Foreground="#F1F5F9"
+                                         BorderBrush="#334155"
+                                         BorderThickness="1"
+                                         Padding="8,6"
+                                         Height="54"
+                                         TextWrapping="Wrap"
+                                         AcceptsReturn="True"
+                                         FontSize="12"/>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <!-- Settings Footer -->
+                    <Border Grid.Row="2" Background="#141824" CornerRadius="0,0,11,11" BorderBrush="#1E293B" BorderThickness="0,1,0,0" Padding="12,8">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left"
+                                    Style="{StaticResource ActionBtnStyle}"
+                                    Click="ResetSettingsBtn_Click"
+                                    Content="Скинути"
+                                    Padding="10,5"/>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Style="{StaticResource ActionBtnStyle}"
+                                        Click="CancelSettingsBtn_Click"
+                                        Content="Закрити"
+                                        Padding="12,5"
+                                        Margin="0,0,6,0"/>
+                                <Button Style="{StaticResource ActionBtnStyle}"
+                                        Click="SaveSettingsBtn_Click"
+                                        Background="#4F46E5"
+                                        BorderBrush="#6366F1"
+                                        Foreground="White"
+                                        FontWeight="SemiBold"
+                                        Content="💾 Зберегти"
+                                        Padding="14,5"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
